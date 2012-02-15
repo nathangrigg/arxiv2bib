@@ -1,5 +1,13 @@
 #! /usr/bin/python
 
+# By Nathan Grigg, Feb 2012
+#
+# Indiscriminate automated downloads from arXiv.org are not permitted.
+# For more information, see http://arxiv.org/help/robots
+#
+# This script usually makes only one call to arxiv.org per run.
+# No caching of any kind is performed.
+
 from urllib import urlopen,urlencode
 from xml.etree import ElementTree
 import sys
@@ -146,11 +154,20 @@ def arxiv2bib(id_list):
 def arxiv_request(ids):
     """Sends a request to the arxiv API."""
     q = urlencode([
-                    ("id_list", ",".join(ids)),
-                    ("max_results", len(ids))
-                    ])
+         ("id_list", ",".join(ids)),
+         ("max_results", len(ids))
+         ])
     url = "http://export.arxiv.org/api/query?" + q
-    return ElementTree.fromstring(urlopen(url).read())
+    xml = urlopen(url)
+    if xml.getcode() == 403:
+        raise Error(
+"""403 Forbidden error. This usually happens when you make many
+rapid fire requests in a row. If you continue to do this, arXiv.org may
+interpret your requests as a denial of service attack.
+
+For more information, see http://arxiv.org/help/robots.
+""")
+    return ElementTree.fromstring(xml.read())
 
 def arxiv2bib_dict(id_list):
     """Fetches citations for ids in id_list into a dictionary indexed by id"""
