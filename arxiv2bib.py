@@ -57,6 +57,7 @@ class Reference:
                 self.year,self.month = self._published()
                 self.updated = self._field_text('updated')
                 self.bare_id = self.id[:self.id.rfind('v')]
+                self.note = self._field_text('journal_ref',namespace=ARXIV)
                 self.error = ""
 
     def _authors(self):
@@ -107,25 +108,28 @@ class Reference:
         self.category=""
         self.year=""
         self.updated=""
+        self.note=""
 
     def bibtex(self):
         """Returns BibTex string of the reference."""
         if self.error:
             return "@comment{%(id)s: %(error)s}" % \
                 {'id': self.id, 'error': self.error}
-        else:
-            return """@article{%(id)s,
-Author = {%(authors)s},
-Title = {%(title)s},
-Eprint = {%(id)s},
-ArchivePrefix = {arXiv},
-PrimaryClass = {%(class)s},
-Abstract = {%(summary)s},
-Year = {%(year)s},
-Month = {%(month)s}
-}""" % {'id':self.id, 'authors':" and ".join(self.authors),
-        'title':self.title, 'summary': self.summary,
-        'year':self.year,'month':self.month,'class':self.category}
+
+        lines = ["@article{" + self.id ]
+        for k,v in [("Author"," and ".join(self.authors)),
+                    ("Title",self.title),
+                    ("Eprint",self.id),
+                    ("ArchivePrefix","arXiv"),
+                    ("PrimaryClass",self.category),
+                    ("Abstract",self.summary),
+                    ("Year",self.year),
+                    ("Month",self.month),
+                    ("Note",self.note)]:
+            if len(v):
+                lines.append("%-13s = {%s}" % (k,v))
+
+        return ",\n".join(lines) + "\n}"
 
 def is_valid(id):
     """Checks if id is a valid arxiv identifier"""
