@@ -1,14 +1,38 @@
 #! /usr/bin/python
 
-
 from urllib import urlopen,urlencode
 from xml.etree import ElementTree
 import sys
+import re
 
 ATOM ='{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
+NEW_STYLE = re.compile(r'\d{4}\.\d{4}(v\d+)?$')
+OLD_STYLE_XX = re.compile(
+    r'(astro-ph)|(stat)|(q-fin)|(q-bio)|(cs)|(nlin)|(math)' +
+    r'(\.[A-Z]{2})?/\d{7}(v\d+)?$')
+physics_categories = {
+    'cond-mat': ['dis-nn','mes-hall','mtrl-sci','other','quant-gas',
+                 'soft','stat','str-el','supr-cond'],
+    'gr-qc': [],
+    'hep-ex': [],
+    'hep-lat': [],
+    'hep-ph': [],
+    'hep-th': [],
+    'nucl-ex': [],
+    'nucl-th': [],
+    'physics': ['acc-ph','ao-ph','atm-clus','atom-ph','bio-ph','chem-ph',
+                'class-ph','comp-ph','data-an','ed-ph','flu-dyn','gen-ph',
+                'geo-ph','hist-ph','ins-det','med-ph','optics','plasm-ph',
+                'pop-ph','soc-ph','space-ph'],
+    'quant-ph': []}
+OLD_STYLE_PH = re.compile(r"([a-z\-]+)(\.([a-z\-]+))?/\d{7}(v\d+)?$")
+
+class Error(Exception):
+    pass
 
 class Reference:
+    """Represents a single reference, parses xml upon initialization."""
     def __init__(self,entry_xml,error="",id=""):
         if error:
             self._error(error,id)
@@ -26,11 +50,14 @@ class Reference:
                 self.updated = self._field_text('updated')
                 self.bare_id = self.id[:self.id.rfind('v')]
                 self.error = ""
+
     def _authors(self):
+        """Extracts author names from xml."""
         xml_list = self.xml.findall(ATOM+'author/'+ATOM+'name')
         return [field.text for field in xml_list]
 
     def _field_text(self,id,namespace=ATOM):
+        """Extracts text from arbitrary xml field"""
         try:
             return self.xml.find(namespace+id).text.strip()
         except:
@@ -55,12 +82,14 @@ class Reference:
             return "",""
         y,m = published[:4],published[5:7]
         try:
-            m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Nov","Dec"][int(m)-1]
+            m = ["Jan","Feb","Mar","Apr","May","Jun","Jul",
+                 "Aug","Sep","Nov","Dec"][int(m)-1]
         except:
             pass
         return y,m
 
     def _error(self,error,id):
+        """Initializes empty reference with error message."""
         self.error = error
         self.id = id
         self.bare_id = id
@@ -72,6 +101,7 @@ class Reference:
         self.updated=""
 
     def bibtex(self):
+        """Returns BibTex string of the reference."""
         if self.error:
             return "@comment{%(id)s: %(error)s}" % \
                 {'id': self.id, 'error': self.error}
@@ -86,15 +116,23 @@ Abstract = {%(summary)s},
 Year = {%(year)s},
 Month = {%(month)s}
 }""" % {'id':self.id, 'authors':" and ".join(self.authors),
-                      'title':self.title, 'summary': self.summary,
-                      'year':self.year,'month':self.month,'class':self.category}
+        'title':self.title, 'summary': self.summary,
+        'year':self.year,'month':self.month,'class':self.category}
 
 def is_valid(id):
     """Checks if id is a valid arxiv identifier"""
-    return True
+    if NEW_STYLE.match(id) is not None or OLD_STYLE_XX.match(id) is not None:
+        return True
+    match = OLD_STYLE_PH.match(id)
+    if match is not None and match.group(1) in physics_categories:
+        if match.group(3) is None or \
+        match.group(3) in physics_categories[match.group(1)]:
+            return True
+    return False
+
 
 def arxiv2bib(id_list):
-    """Returns a list of bibtex strings, corresponding to elts of id_list"""
+    """Returns a list of references, corresponding to elts of id_list"""
     d = arxiv2bib_dict(id_list)
     l = []
     for id in id_list:
@@ -106,6 +144,7 @@ def arxiv2bib(id_list):
     return l
 
 def arxiv_request(ids):
+    """Sends a request to the arxiv API."""
     q = urlencode([
                     ("id_list", ",".join(ids)),
                     ("max_results", len(ids))
@@ -125,6 +164,9 @@ def arxiv2bib_dict(id_list):
         else:
             d[id]=Reference(None,error="Invalid arXiv identifier",id=id)
 
+    if len(ids) == 0:
+        return d
+
     # make the api call
     while True:
         xml = arxiv_request(ids)
@@ -134,7 +176,7 @@ def arxiv2bib_dict(id_list):
         try:
             first_title = entries[0].find(ATOM+"title")
         except:
-            sys.exit("Arxiv returning an error that I can't get around.")
+            raise Error("Unable to connect to arXiv.org API.")
 
         if first_title is None or first_title.text.strip() != "Error":
             break
@@ -143,7 +185,7 @@ def arxiv2bib_dict(id_list):
             id = entries[0].find(ATOM+"summary").text.split()[-1]
             del(ids[ids.index(id)])
         except:
-            sys.exit("Arxiv returning an error that I can't get around.")
+            raise Error("Unable to parse an error returned by arXiv.org.")
 
 
     # Parse each reference and store it in dictionary
@@ -156,6 +198,9 @@ def arxiv2bib_dict(id_list):
                 d[ref.bare_id] = ref
 
     return d
+
+
+# Main execution
 
 if __name__ == "__main__":
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -172,12 +217,17 @@ order the ids were supplied. If it cannot find one particular id, it will
 print an error message inside a BibTeX @comment field. It will return a
 nonzero exit code if it cannot connect or fails to parse the arXiv api.
 """
-        sys.exit()
+        sys.exit(0)
 
     if len(sys.argv) == 1:
-        bib = arxiv2bib([line.strip() for line in sys.stdin.readlines()])
+        id_list = [line.strip() for line in sys.stdin.readlines()]
     else:
-        bib = arxiv2bib(sys.argv[1:])
+        id_list = sys.argv[1:]
+
+    try:
+        bib = arxiv2bib(id_list)
+    except Error as error:
+        sys.exit(error)
 
     if len(bib) == 1 and bib[0].error:
         sys.exit(bib[0].error)
