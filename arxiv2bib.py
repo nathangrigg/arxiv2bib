@@ -257,11 +257,11 @@ if __name__ == "__main__":
         if b.error:
             errors += 1
             if args.errors_in_comments:
-                print b.bibtex()
+                print b.bibtex().encode("UTF-8")
             if args.v:
                 sys.stderr.write(b.error)
         else:
-            print b.bibtex()
+            print b.bibtex().encode("UTF-8")
 
     if errors == len(bib):
         sys.exit("Error: No successful matches")
