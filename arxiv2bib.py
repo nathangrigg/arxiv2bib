@@ -221,38 +221,50 @@ def arxiv2bib_dict(id_list):
     return d
 
 
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(
+      description="""Returns the BibTeX for each arXiv id.""")
+    parser.add_argument('id',metavar='arxiv_id',nargs="*",
+      help="arxiv identifier, such as 1201.1213")
+    parser.add_argument('--errors-in-comments',action='store_true',
+      help="Display error messages in @comment fields. This option " + \
+      "guarantees one BibTeX entry per arxiv id, in the same order.")
+    parser.add_argument('--error-on-total-failure',action='store_true',
+      help="Return an error code of 0 as long as a single record was found.")
+    parser.add_argument('-v',action='store_true',
+      help="Print detailed errors to stderr.")
+    return parser.parse_args()
+
+
 # Main execution
 
 if __name__ == "__main__":
-    if '-h' in sys.argv or '--help' in sys.argv:
-        print """Usage: %s [arxiv_id [arxiv_id [...]]]
+    args = parse_args()
 
-Returns the BibTeX for each arXiv id.
-If no arguments are given, it takes arXiv ids from stdin, one per line.
-
-If only one id is given, it will print the BibTeX entry of the id, if possible.
-Otherwise, it will return an error.
-
-If multiple ids are given, it will print the BibTeX entry for each id, in the
-order the ids were supplied. If it cannot find one particular id, it will
-print an error message inside a BibTeX @comment field. It will return a
-nonzero exit code if it cannot connect or fails to parse the arXiv api.
-"""
-        sys.exit(0)
-
-    if len(sys.argv) == 1:
+    if len(args.id) == 0:
         id_list = [line.strip() for line in sys.stdin.readlines()]
     else:
-        id_list = sys.argv[1:]
+        id_list = args.id
 
     try:
         bib = arxiv2bib(id_list)
     except Error as error:
         sys.exit(error)
 
-    if len(bib) == 1 and bib[0].error:
-        sys.exit(bib[0].error)
-    else:
-        for b in bib:
+    errors = 0
+    for b in bib:
+        if b.error:
+            errors += 1
+            if args.errors_in_comments:
+                print b.bibtex()
+            if args.v:
+                sys.stderr.write(b.error)
+        else:
             print b.bibtex()
 
+    if errors == len(bib):
+        sys.exit("Error: No successful matches")
+    elif errors > 0 and not args.error_on_total_failure:
+        sys.exit("Error: %s of %s matched succesfully" % \
+          (len(bib)-errors,len(bib)))
