@@ -233,6 +233,8 @@ def parse_args():
       help="Include @comment fields with error details")
     parser.add_argument('-q', '--quiet', action='store_true',
       help="Display fewer error messages")
+    parser.add_argument('-v', '--verbose', action="store_true",
+      help="Display more error messages")
     return parser.parse_args()
 
 
@@ -245,6 +247,10 @@ if __name__ == "__main__":
         id_list = [line.strip() for line in sys.stdin.readlines()]
     else:
         id_list = args.id
+
+    # avoid duplicate error messages unless verbose is set
+    if args.comments and not args.verbose:
+        args.quiet = True
 
     try:
         bib = arxiv2bib(id_list)
