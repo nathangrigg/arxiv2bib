@@ -8,11 +8,12 @@
 # This script usually makes only one call to arxiv.org per run.
 # No caching of any kind is performed.
 
-from urllib import urlopen,urlencode
+from urllib import urlopen, urlencode
 from xml.etree import ElementTree
 import sys
 import re
 
+# regular expressions to check if arxiv id is valid
 ATOM ='{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
 NEW_STYLE = re.compile(r'\d{4}\.\d{4}(v\d+)?$')
@@ -35,6 +36,17 @@ physics_categories = {
                 'pop-ph','soc-ph','space-ph'],
     'quant-ph': []}
 OLD_STYLE_PH = re.compile(r"([a-z\-]+)(\.([a-z\-]+))?/\d{7}(v\d+)?$")
+
+def is_valid(id):
+    """Checks if id resembles a valid arxiv identifier."""
+    if NEW_STYLE.match(id) is not None or OLD_STYLE_XX.match(id) is not None:
+        return True
+    match = OLD_STYLE_PH.match(id)
+    if match is not None and match.group(1) in physics_categories:
+        if match.group(3) is None or \
+        match.group(3) in physics_categories[match.group(1)]:
+            return True
+    return False
 
 class FatalError(Exception):
     pass
@@ -60,10 +72,10 @@ class Reference(object):
 
     def _authors(self):
         """Extracts author names from xml."""
-        xml_list = self.xml.findall(ATOM+'author/'+ATOM+'name')
+        xml_list = self.xml.findall(ATOM + 'author/' + ATOM + 'name')
         return [field.text for field in xml_list]
 
-    def _field_text(self,id,namespace=ATOM):
+    def _field_text(self, id, namespace=ATOM):
         """Extracts text from arbitrary xml field"""
         try:
             return self.xml.find(namespace+id).text.strip()
@@ -72,56 +84,47 @@ class Reference(object):
 
     def _category(self):
         try:
-            return self.xml.find(ARXIV+'primary_category').attrib['term']
+            return self.xml.find(ARXIV + 'primary_category').attrib['term']
         except:
             return ""
 
     def _id(self):
         try:
             id_url=self._field_text('id')
-            return id_url[id_url.find('/abs/')+5:]
+            return id_url[id_url.find('/abs/') + 5:]
         except:
             return ""
 
     def _published(self):
         published = self._field_text('published')
         if len(published) < 7:
-            return "",""
-        y,m = published[:4],published[5:7]
+            return "", ""
+        y,m = published[:4], published[5:7]
         try:
             m = ["Jan","Feb","Mar","Apr","May","Jun","Jul",
                  "Aug","Sep","Nov","Dec"][int(m)-1]
         except:
             pass
+        return y, m
 
     def bibtex(self):
         """Returns BibTex string of the reference."""
 
         lines = ["@article{" + self.id ]
-        for k,v in [("Author"," and ".join(self.authors)),
-                    ("Title",self.title),
-                    ("Eprint",self.id),
-                    ("ArchivePrefix","arXiv"),
-                    ("PrimaryClass",self.category),
-                    ("Abstract",self.summary),
-                    ("Year",self.year),
-                    ("Month",self.month),
-                    ("Note",self.note)]:
+        for k,v in [("Author", " and ".join(self.authors)),
+                    ("Title", self.title),
+                    ("Eprint", self.id),
+                    ("ArchivePrefix", "arXiv"),
+                    ("PrimaryClass", self.category),
+                    ("Abstract", self.summary),
+                    ("Year", self.year),
+                    ("Month", self.month),
+                    ("Note", self.note)]:
             if len(v):
                 lines.append("%-13s = {%s}" % (k,v))
 
         return ",\n".join(lines) + "\n}"
 
-def is_valid(id):
-    """Checks if id is a valid arxiv identifier"""
-    if NEW_STYLE.match(id) is not None or OLD_STYLE_XX.match(id) is not None:
-        return True
-    match = OLD_STYLE_PH.match(id)
-    if match is not None and match.group(1) in physics_categories:
-        if match.group(3) is None or \
-        match.group(3) in physics_categories[match.group(1)]:
-            return True
-    return False
 class ReferenceErrorInfo(object):
     """Contains information about a reference error"""
     def __init__(self, message, id):
@@ -189,9 +192,9 @@ def arxiv2bib_dict(id_list):
         xml = arxiv_request(ids)
 
         # check for error
-        entries = xml.findall(ATOM+"entry")
+        entries = xml.findall(ATOM + "entry")
         try:
-            first_title = entries[0].find(ATOM+"title")
+            first_title = entries[0].find(ATOM + "title")
         except:
             raise FatalError("Unable to connect to arXiv.org API.")
 
@@ -274,5 +277,5 @@ if __name__ == "__main__":
         sys.exit(2)
     elif errors > 0:
         sys.stderr.write("Error: %s of %s matched succesfully\n" % \
-          (len(bib)-errors,len(bib)))
+          (len(bib)-errors, len(bib)))
         sys.exit(1)
