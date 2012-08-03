@@ -224,16 +224,15 @@ def arxiv2bib_dict(id_list):
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser(
-      description="""Returns the BibTeX for each arXiv id.""")
+      description="Get the BibTeX for each arXiv id.",
+      epilog="Returns 0 on success, 1 on partial failure, 2 on total failure.\
+      Valid BibTeX is written to stdout, error messages to stderr.")
     parser.add_argument('id',metavar='arxiv_id',nargs="*",
       help="arxiv identifier, such as 1201.1213")
-    parser.add_argument('--errors-in-comments',action='store_true',
-      help="Display error messages in @comment fields. This option " + \
-      "guarantees one BibTeX entry per arxiv id, in the same order.")
-    parser.add_argument('--error-on-total-failure',action='store_true',
-      help="Return an error code of 0 as long as a single record was found.")
-    parser.add_argument('-v',action='store_true',
-      help="Print detailed errors to stderr.")
+    parser.add_argument('-c', '--comments', action='store_true',
+      help="Include @comment fields with error details")
+    parser.add_argument('-q', '--quiet', action='store_true',
+      help="Display fewer error messages")
     return parser.parse_args()
 
 
@@ -250,21 +249,24 @@ if __name__ == "__main__":
     try:
         bib = arxiv2bib(id_list)
     except Error as error:
-        sys.exit(error)
+        sys.stderr.write(error + "\n")
+        sys.exit(2)
 
     errors = 0
     for b in bib:
         if b.error:
             errors += 1
-            if args.errors_in_comments:
+            if args.comments:
                 print b.bibtex().encode("UTF-8")
-            if args.v:
-                sys.stderr.write(b.error)
+            if not args.quiet:
+                sys.stderr.write(b.error + "\n")
         else:
             print b.bibtex().encode("UTF-8")
 
     if errors == len(bib):
-        sys.exit("Error: No successful matches")
-    elif errors > 0 and not args.error_on_total_failure:
-        sys.exit("Error: %s of %s matched succesfully" % \
+        sys.stderr.write("Error: No successful matches\n")
+        sys.exit(2)
+    elif errors > 0:
+        sys.stderr.write("Error: %s of %s matched succesfully\n" % \
           (len(bib)-errors,len(bib)))
+        sys.exit(1)
