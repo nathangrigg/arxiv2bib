@@ -36,29 +36,27 @@ physics_categories = {
     'quant-ph': []}
 OLD_STYLE_PH = re.compile(r"([a-z\-]+)(\.([a-z\-]+))?/\d{7}(v\d+)?$")
 
-class Error(Exception):
+class FatalError(Exception):
     pass
 
-class Reference:
+class ReferenceError(Exception):
+    pass
+
+class Reference(object):
     """Represents a single reference, parses xml upon initialization."""
-    def __init__(self,entry_xml,error="",id=""):
-        if error:
-            self._error(error,id)
-        else:
-            self.xml = entry_xml
-            self.id = self._id()
-            self.authors  = self._authors()
-            self.title    = self._field_text('title')
-            if len(self.id)==0 or len(self.authors)==0 or len(self.title)==0:
-                self._error("No such publication",self.id)
-            else:
-                self.summary  = self._field_text('summary')
-                self.category = self._category()
-                self.year,self.month = self._published()
-                self.updated = self._field_text('updated')
-                self.bare_id = self.id[:self.id.rfind('v')]
-                self.note = self._field_text('journal_ref',namespace=ARXIV)
-                self.error = ""
+    def __init__(self, entry_xml):
+        self.xml = entry_xml
+        self.id = self._id()
+        self.authors  = self._authors()
+        self.title    = self._field_text('title')
+        if len(self.id) == 0 or len(self.authors) == 0 or len(self.title) == 0:
+            raise ReferenceError("No such publication", self.id)
+        self.summary  = self._field_text('summary')
+        self.category = self._category()
+        self.year,self.month = self._published()
+        self.updated = self._field_text('updated')
+        self.bare_id = self.id[:self.id.rfind('v')]
+        self.note = self._field_text('journal_ref', namespace=ARXIV)
 
     def _authors(self):
         """Extracts author names from xml."""
@@ -95,26 +93,9 @@ class Reference:
                  "Aug","Sep","Nov","Dec"][int(m)-1]
         except:
             pass
-        return y,m
-
-    def _error(self,error,id):
-        """Initializes empty reference with error message."""
-        self.error = error
-        self.id = id
-        self.bare_id = id
-        self.authors=""
-        self.title=""
-        self.summary=""
-        self.category=""
-        self.year=""
-        self.updated=""
-        self.note=""
 
     def bibtex(self):
         """Returns BibTex string of the reference."""
-        if self.error:
-            return "@comment{%(id)s: %(error)s}" % \
-                {'id': self.id, 'error': self.error}
 
         lines = ["@article{" + self.id ]
         for k,v in [("Author"," and ".join(self.authors)),
@@ -141,7 +122,22 @@ def is_valid(id):
         match.group(3) in physics_categories[match.group(1)]:
             return True
     return False
+class ReferenceErrorInfo(object):
+    """Contains information about a reference error"""
+    def __init__(self, message, id):
+        self.message = message
+        self.id = id
+        self.bare_id = id[:id.rfind('v')]
+        # mark it as really old, so it gets superseded if possible
+        self.updated = '0'
 
+    def bibtex(self):
+        return "@comment{%(id)s: %(message)s}" % \
+                {'id': self.id, 'message': self.message}
+
+    def __str__(self):
+        return "Error: %(message)s (%(id)s)" % \
+                {'id': self.id, 'message': self.message}
 
 def arxiv2bib(id_list):
     """Returns a list of references, corresponding to elts of id_list"""
@@ -151,7 +147,7 @@ def arxiv2bib(id_list):
         try:
             l.append(d[id])
         except:
-            l.append(Reference(None,"Not found",id))
+            l.append(ReferenceErrorInfo("Not found", id))
 
     return l
 
@@ -164,7 +160,7 @@ def arxiv_request(ids):
     url = "http://export.arxiv.org/api/query?" + q
     xml = urlopen(url)
     if xml.getcode() == 403:
-        raise Error(
+        raise FatalError(
 """403 Forbidden error. This usually happens when you make many
 rapid fire requests in a row. If you continue to do this, arXiv.org may
 interpret your requests as a denial of service attack.
@@ -183,7 +179,7 @@ def arxiv2bib_dict(id_list):
         if is_valid(id):
             ids.append(id)
         else:
-            d[id]=Reference(None,error="Invalid arXiv identifier",id=id)
+            d[id] = ReferenceErrorInfo("Invalid arXiv identifier", id)
 
     if len(ids) == 0:
         return d
@@ -197,7 +193,7 @@ def arxiv2bib_dict(id_list):
         try:
             first_title = entries[0].find(ATOM+"title")
         except:
-            raise Error("Unable to connect to arXiv.org API.")
+            raise FatalError("Unable to connect to arXiv.org API.")
 
         if first_title is None or first_title.text.strip() != "Error":
             break
@@ -206,12 +202,16 @@ def arxiv2bib_dict(id_list):
             id = entries[0].find(ATOM+"summary").text.split()[-1]
             del(ids[ids.index(id)])
         except:
-            raise Error("Unable to parse an error returned by arXiv.org.")
+            raise FatalError("Unable to parse an error returned by arXiv.org.")
 
 
     # Parse each reference and store it in dictionary
     for entry in entries:
-        ref = Reference(entry)
+        try:
+            ref = Reference(entry)
+        except ReferenceError as error:
+            message, id = error
+            ref = ReferenceErrorInfo(message, id)
         if ref.id:
             d[ref.id] = ref
         if ref.bare_id:
@@ -248,18 +248,18 @@ if __name__ == "__main__":
 
     try:
         bib = arxiv2bib(id_list)
-    except Error as error:
+    except FatalError as error:
         sys.stderr.write(error + "\n")
         sys.exit(2)
 
     errors = 0
     for b in bib:
-        if b.error:
+        if type(b) is ReferenceErrorInfo:
             errors += 1
             if args.comments:
                 print b.bibtex().encode("UTF-8")
             if not args.quiet:
-                sys.stderr.write(b.error + "\n")
+                sys.stderr.write("%s\n" % b)
         else:
             print b.bibtex().encode("UTF-8")
 
