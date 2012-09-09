@@ -254,8 +254,11 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(
       description="Get the BibTeX for each arXiv id.",
-      epilog="Returns 0 on success, 1 on partial failure, 2 on total failure.\
-      Valid BibTeX is written to stdout, error messages to stderr.")
+      epilog="""\
+Returns 0 on success, 1 on partial failure, 2 on total failure.
+Valid BibTeX is written to stdout, error messages to stderr.
+If no arguments are given, ids are read from stdin, one per line.""",
+      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('id',metavar='arxiv_id',nargs="*",
       help="arxiv identifier, such as 1201.1213")
     parser.add_argument('-c', '--comments', action='store_true',
@@ -266,8 +269,7 @@ def parse_args():
       help="Display more error messages")
     return parser.parse_args()
 
-# Main execution
-if __name__ == "__main__":
+def run_from_command_line():
     args = parse_args()
 
     if len(args.id) == 0:
@@ -303,3 +305,6 @@ if __name__ == "__main__":
         sys.stderr.write("Error: %s of %s matched succesfully\n" % \
           (len(bib)-errors, len(bib)))
         sys.exit(1)
+
+if __name__ == "__main__":
+    run_from_command_line()
