@@ -40,6 +40,8 @@ from xml.etree import ElementTree
 import sys
 import re
 
+__version__ = "0.1.1"
+
 # regular expressions to check if arxiv id is valid
 ATOM ='{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
