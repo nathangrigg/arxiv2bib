@@ -40,6 +40,7 @@ import urllib2
 from xml.etree import ElementTree
 import sys
 import re
+import os
 
 __version__ = "0.1.1"
 
@@ -165,7 +166,7 @@ class Reference(object):
             if len(v):
                 lines.append("%-13s = {%s}" % (k,v))
 
-        return ",\n".join(lines) + "\n}"
+        return ("," + os.linesep).join(lines) + os.linesep + "}"
 
 class ReferenceErrorInfo(object):
     """Contains information about a reference error"""
@@ -310,7 +311,7 @@ For more information, see http://arxiv.org/help/robots.
               "HTTP Connection Error: {0}".format(error.getcode()))
         sys.exit(2)
     except FatalError as error:
-        sys.stderr.write(error + "\n")
+        sys.stderr.write(error + os.linesep)
         sys.exit(2)
 
     errors = 0
@@ -320,16 +321,16 @@ For more information, see http://arxiv.org/help/robots.
             if args.comments:
                 print b.bibtex().encode("UTF-8")
             if not args.quiet:
-                sys.stderr.write("%s\n" % b)
+                sys.stderr.write(str(b) + os.linesep)
         else:
             print b.bibtex().encode("UTF-8")
 
     if errors == len(bib):
-        sys.stderr.write("Error: No successful matches\n")
+        sys.stderr.write("Error: No successful matches" + os.linesep)
         sys.exit(2)
     elif errors > 0:
-        sys.stderr.write("Error: %s of %s matched succesfully\n" % \
-          (len(bib)-errors, len(bib)))
+        sys.stderr.write("Error: %s of %s matched succesfully" % \
+          (len(bib)-errors, len(bib)) + os.linesep)
         sys.exit(1)
 
 if __name__ == "__main__":
