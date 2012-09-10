@@ -35,7 +35,8 @@
 # This script usually makes only one call to arxiv.org per run.
 # No caching of any kind is performed.
 
-from urllib import urlopen, urlencode
+import urllib
+import urllib2
 from xml.etree import ElementTree
 import sys
 import re
@@ -198,20 +199,13 @@ def arxiv2bib(id_list):
 
 def arxiv_request(ids):
     """Sends a request to the arxiv API."""
-    q = urlencode([
+    q = urllib.urlencode([
          ("id_list", ",".join(ids)),
          ("max_results", len(ids))
          ])
-    url = "http://export.arxiv.org/api/query?" + q
-    xml = urlopen(url)
-    if xml.getcode() == 403:
-        raise FatalError(
-"""403 Forbidden error. This usually happens when you make many
-rapid fire requests in a row. If you continue to do this, arXiv.org may
-interpret your requests as a denial of service attack.
-
-For more information, see http://arxiv.org/help/robots.
-""")
+    xml = urllib2.urlopen("http://export.arxiv.org/api/query?" + q)
+    # xml.read() returns bytes, but ElementTree.fromstring decodes
+    # to unicode when needed (python2) or string (python3)
     return ElementTree.fromstring(xml.read())
 
 def arxiv2bib_dict(id_list):
@@ -302,6 +296,19 @@ def run_from_command_line():
 
     try:
         bib = arxiv2bib(id_list)
+    except urllib2.HTTPError as error:
+        if error.getcode() == 403:
+            sys.stderr.write("""\
+403 Forbidden error. This usually happens when you make many
+rapid fire requests in a row. If you continue to do this, arXiv.org may
+interpret your requests as a denial of service attack.
+
+For more information, see http://arxiv.org/help/robots.
+""")
+        else:
+            sys.stderr.write(
+              "HTTP Connection Error: {0}".format(error.getcode()))
+        sys.exit(2)
     except FatalError as error:
         sys.stderr.write(error + "\n")
         sys.exit(2)
