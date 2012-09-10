@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 #
 # Copyright (c) 2012, Nathan Grigg
 # All rights reserved.
@@ -42,9 +42,14 @@ import re
 
 __version__ = "0.1.1"
 
-# regular expressions to check if arxiv id is valid
+if sys.version_info < (2, 6):
+    sys.exit("Python 2.6 or higher required")
+
+# Namespaces
 ATOM ='{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
+
+# regular expressions to check if arxiv id is valid
 NEW_STYLE = re.compile(r'\d{4}\.\d{4}(v\d+)?$')
 OLD_STYLE_XX = re.compile(
     r'(astro-ph)|(stat)|(q-fin)|(q-bio)|(cs)|(nlin)|(math)' +
@@ -84,7 +89,11 @@ class ReferenceError(Exception):
     pass
 
 class Reference(object):
-    """Represents a single reference, parses xml upon initialization."""
+    """Represents a single reference.
+
+    Instantiate using Reference(entry_xml). Note entry_xml should be
+    an ElementTree.Element object.
+    """
     def __init__(self, entry_xml):
         self.xml = entry_xml
         self.id = self._id()
@@ -112,12 +121,14 @@ class Reference(object):
             return ""
 
     def _category(self):
+        """Get category"""
         try:
             return self.xml.find(ARXIV + 'primary_category').attrib['term']
         except:
             return ""
 
     def _id(self):
+        """Get arxiv id"""
         try:
             id_url=self._field_text('id')
             return id_url[id_url.find('/abs/') + 5:]
@@ -125,6 +136,7 @@ class Reference(object):
             return ""
 
     def _published(self):
+        """Get published date"""
         published = self._field_text('published')
         if len(published) < 7:
             return "", ""
@@ -137,7 +149,7 @@ class Reference(object):
         return y, m
 
     def bibtex(self):
-        """Returns BibTex string of the reference."""
+        """BibTex string of the reference."""
 
         lines = ["@article{" + self.id ]
         for k,v in [("Author", " and ".join(self.authors)),
@@ -164,6 +176,7 @@ class ReferenceErrorInfo(object):
         self.updated = '0'
 
     def bibtex(self):
+        """BibTeX comment explaining error"""
         return "@comment{%(id)s: %(message)s}" % \
                 {'id': self.id, 'message': self.message}
 
@@ -253,7 +266,11 @@ def arxiv2bib_dict(id_list):
     return d
 
 def parse_args():
-    import argparse
+    try:
+        import argparse
+    except:
+        sys.exit("Cannot load required module 'argparse'")
+
     parser = argparse.ArgumentParser(
       description="Get the BibTeX for each arXiv id.",
       epilog="""\
