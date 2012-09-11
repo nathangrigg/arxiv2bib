@@ -1,9 +1,14 @@
 from distutils.core import setup
-import arxiv2bib
+
+try:
+    from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+    # 2.x
+    from distutils.command.build_py import build_py
 
 setup(
     name = "arxiv2bib",
-    version = arxiv2bib.__version__,
+    version = "0.1.2",
     description = "Get arXiv.org metadata in BibTeX format",
     author = "Nathan Grigg",
     author_email = "nathan@nathanamy.org",
@@ -12,9 +17,11 @@ setup(
     keywords = ["arxiv", "bibtex", "latex", "citation"],
     scripts = ['scripts/arxiv2bib'],
     license = "BSD",
+    cmdclass = {'build_py': build_py},
     classifiers = [
-        "Programming Language :: Python",
         "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Development Status :: 4 - Beta",

@@ -35,14 +35,12 @@
 # This script usually makes only one call to arxiv.org per run.
 # No caching of any kind is performed.
 
-import urllib
-import urllib2
+from urllib import urlencode
+from urllib2 import HTTPError, urlopen
 from xml.etree import ElementTree
 import sys
 import re
 import os
-
-__version__ = "0.1.1"
 
 if sys.version_info < (2, 6):
     sys.exit("Python 2.6 or higher required")
@@ -200,11 +198,11 @@ def arxiv2bib(id_list):
 
 def arxiv_request(ids):
     """Sends a request to the arxiv API."""
-    q = urllib.urlencode([
+    q = urlencode([
          ("id_list", ",".join(ids)),
          ("max_results", len(ids))
          ])
-    xml = urllib2.urlopen("http://export.arxiv.org/api/query?" + q)
+    xml = urlopen("http://export.arxiv.org/api/query?" + q)
     # xml.read() returns bytes, but ElementTree.fromstring decodes
     # to unicode when needed (python2) or string (python3)
     return ElementTree.fromstring(xml.read())
@@ -283,6 +281,13 @@ If no arguments are given, ids are read from stdin, one per line.""",
       help="Display more error messages")
     return parser.parse_args()
 
+def print_bytes(s):
+    """Print bytes to stdout in Python 2 or 3"""
+    if sys.version_info[0] == 2:
+        sys.stdout.write(s)
+    else:
+        sys.stdout.buffer.write(s)
+
 def run_from_command_line():
     args = parse_args()
 
@@ -297,7 +302,7 @@ def run_from_command_line():
 
     try:
         bib = arxiv2bib(id_list)
-    except urllib2.HTTPError as error:
+    except HTTPError as error:
         if error.getcode() == 403:
             sys.stderr.write("""\
 403 Forbidden error. This usually happens when you make many
@@ -315,16 +320,28 @@ For more information, see http://arxiv.org/help/robots.
         sys.exit(2)
 
     errors = 0
+    output = []
     for b in bib:
         if type(b) is ReferenceErrorInfo:
             errors += 1
             if args.comments:
-                print b.bibtex().encode("UTF-8")
+                output.append(b.bibtex())
             if not args.quiet:
                 sys.stderr.write(str(b) + os.linesep)
         else:
-            print b.bibtex().encode("UTF-8")
+            output.append(b.bibtex())
 
+    # print it out
+    output = os.linesep.join(output)
+    try:
+        print output
+    except UnicodeEncodeError:
+        print_bytes((output + os.linesep).encode('utf-8'))
+        if args.verbose:
+            sys.stderr.write(
+              'Could not use system encoding; using utf-8' + os.linesep)
+
+    # print error messages
     if errors == len(bib):
         sys.stderr.write("Error: No successful matches" + os.linesep)
         sys.exit(2)
