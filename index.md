@@ -8,7 +8,7 @@ Get arXiv.org metadata in BibTeX format
 
     $ arxiv2bib 1001.1001
 
-    article{1001.1001v1,
+    @article{1001.1001v1,
     Author        = {Philip G. Judge},
     Title         = {The chromosphere: gateway to the corona, or the purgatory of solar
       physics?},
@@ -24,17 +24,17 @@ Get arXiv.org metadata in BibTeX format
     Month         = {Jan}
     }
 
-# Installation
+# Installation 
 
 Use [pip][1]:
 
     $ pip install arxiv2bib
 
-Use [easy_install][2]:
+Or use [easy_install][2]:
 
     $ easy_install arxiv2bib
 
-Download [the source][3] and use setup.py:
+Or download [the source][3] and use setup.py:
 
     $ python setup.py install
 
@@ -141,3 +141,8 @@ this program has no dependencies.
 The program will also work with Python 3, with installation via pip,
 easy_install, or the included setup.py. You may also convert it manually
 with 2to3.
+
+[1]: http://www.pip-installer.org/en/latest/installing.html
+[2]: http://pypi.python.org/pypi/setuptools
+[3]: https://github.com/nathan11g/arxiv2bib/tarball/master
+
