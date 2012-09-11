@@ -37,3 +37,7 @@ Request multiple papers at once::
 Use a list of papers from a text file (one per line)::
 
     $ arxiv2bib < papers.txt
+
+More information::
+
+    $ arxiv2bib --help
