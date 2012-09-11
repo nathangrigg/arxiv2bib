@@ -6,6 +6,8 @@ layout: default
 
 Get arXiv.org metadata in BibTeX format
 
+Written by Nathan Grigg
+
     $ arxiv2bib 1001.1001
 
     @article{1001.1001v1,
@@ -36,6 +38,7 @@ Or use [easy_install][2]:
 
 Or download [the source][3] and use setup.py:
 
+    $ cd Downloads/arxiv2bib
     $ python setup.py install
 
 If you cannot install, you can use arxiv2bib.py as a standalone executable.
@@ -87,14 +90,14 @@ More information:
 
 Identification numbers can be given as command line arguments (separated
 by spaces) or via stdin (listed one per line). You may specify a specific
-version of a paper (e.g. 1201.1213v2). If you do not specify the version
+version of a paper (e.g. `1201.1213v2`). If you do not specify the version
 number, you will receive the information for the most recent version 
 on the arXiv. You may also use old-style identification numbers when 
-applicable (e.g. math.CO/0910323).
+applicable (e.g. `math.CO/0910323`).
 
 ### Default operation
 
-By default, the program prints the BibTeX for every paper it succesfully
+By default, the program outputs the BibTeX for every paper it succesfully
 locates via the arXiv API, in the order they were originally listed.
 Papers which cannot be found are skipped. A warning is written to 
 stderr for each skipped paper.
@@ -103,7 +106,7 @@ stderr for each skipped paper.
 
 If the `--comments` option is given, error message are written in BibTeX
 comment fields. This guarantees either an `@article` or `@comment` for
-paper requested, in the same order as the request.
+each paper requested, in the same order as the request.
 
 ### Error codes
 
@@ -134,12 +137,12 @@ not possible, it will encode as UTF-8.
 
 ### Requirements
 
-Requires Python 2.6 or higher. If you are using Python 2.6, you will need
-to also install the `argparse` module. In Python 2.7 or higher, 
-this program has no dependencies.
+Works with Python 2.7 or higher and has no dependencies. Also runs on
+Python 2.6, but you will need to install the
+`argparse` module.
 
-The program will also work with Python 3, with installation via pip,
-easy_install, or the included setup.py. You may also convert it manually
+The program will also run on Python 3, with installation via pip,
+easy_install, or the included setup.py. You can also convert it manually
 with 2to3.
 
 [1]: http://www.pip-installer.org/en/latest/installing.html
