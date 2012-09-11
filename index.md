@@ -24,7 +24,7 @@ Get arXiv.org metadata in BibTeX format
     Month         = {Jan}
     }
 
-# Installation 
+ Installation 
 
 Use [pip][1]:
 
@@ -40,9 +40,9 @@ Or download [the source][3] and use setup.py:
 
 If you cannot install, you can use arxiv2bib.py as a standalone executable.
 
-# Examples
+## Examples
 
-Basic usage:
+Get the BibTeX for a single paper:
 
     $ arxiv2bib 1001.1001
 
@@ -62,9 +62,9 @@ More information:
 
     $ arxiv2bib --help
 
-# Documentation
+## Documentation
 
-## Basic usage
+### Help
 
     arxiv2bib [-h] [-c] [-q] [-v] [arxiv_id [arxiv_id ...]]
 
@@ -83,7 +83,7 @@ More information:
     Valid BibTeX is written to stdout, error messages to stderr.
     If no arguments are given, ids are read from stdin, one per line.
 
-## arXiv identifiers
+### arXiv identifiers
 
 Identification numbers can be given as command line arguments (separated
 by spaces) or via stdin (listed one per line). You may specify a specific
@@ -92,20 +92,20 @@ number, you will receive the information for the most recent version
 on the arXiv. You may also use old-style identification numbers when 
 applicable (e.g. math.CO/0910323).
 
-## Default operation
+### Default operation
 
 By default, the program prints the BibTeX for every paper it succesfully
 locates via the arXiv API, in the order they were originally listed.
 Papers which cannot be found are skipped. A warning is written to 
 stderr for each skipped paper.
 
-## The comments option
+### The comments option
 
 If the `--comments` option is given, error message are written in BibTeX
 comment fields. This guarantees either an `@article` or `@comment` for
 paper requested, in the same order as the request.
 
-## Error codes
+### Error codes
 
 If the program finds a matching paper for each identification number listed,
 it returns a code of 0 (SUCCESS).
@@ -121,7 +121,7 @@ are correct.
 
 In every case, nothing is written to stdout that is not BiBTeX.
 
-## Encoding
+### Encoding
 
 Standard BibTeX allows ASCII characters only, while the arXiv API uses
 Unicode characters encoded by UTF-8.
@@ -132,7 +132,7 @@ non-ASCII characters to TeX commands (e.g. replace `é` with `\'e`)
 The program will attempt to honor your local character encoding. If that is
 not possible, it will encode as UTF-8.
 
-## Requirements
+### Requirements
 
 Requires Python 2.6 or higher. If you are using Python 2.6, you will need
 to also install the `argparse` module. In Python 2.7 or higher, 
