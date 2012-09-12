@@ -102,9 +102,19 @@ small {
 
 @media print, screen and (max-width: 650px) {
 
+  body {
+    width: auto;
+    padding: 20px;
+  }
+
   div.main {
-    width:auto;
-    margin:0;
+    width: 100%;
+    margin: 0;
+
+  }
+
+  pre {
+    width: 100%;
   }
 
   nav {
