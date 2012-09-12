@@ -39,6 +39,9 @@ If you cannot install, you can use `arxiv2bib.py` as a standalone executable.
 
 ## Examples
 
+If you are using Windows, replace `arxiv2bib` with `arxiv2bib.py` in each
+of the following.
+
 Get the BibTeX for a single paper:
 
     $ arxiv2bib 1001.1001
@@ -96,13 +99,23 @@ locates via the arXiv API, in the order they were originally listed.
 Papers which cannot be found are skipped. A warning is written to
 stderr for each skipped paper.
 
+### Limit API calls
+
+The program will generally make a single call to the arXiv API per run,
+even if you request hundreds of papers.
+
+If you run the program repeatedly (for example, in a for loop), you will
+make repeated calls to the API, putting strain on the arXiv server. 
+If this becomes a problem, the API may block your IP address. 
+For more information, see <http://arxiv.org/help/robots>.
+
 ### The comments option
 
 If the `--comments` option is given, error message are written in BibTeX
 comment fields. This guarantees either an `@article` or `@comment` for
 each paper requested, in the same order as the request.
 
-### Error codes
+### Interpreting error codes
 
 If the program finds a matching paper for each identification number listed,
 it returns a code of 0 (SUCCESS).
@@ -118,7 +131,7 @@ are correct.
 
 In every case, nothing is written to stdout that is not BiBTeX.
 
-### Encoding
+### Character encoding
 
 Standard BibTeX allows ASCII characters only, while the arXiv API uses
 Unicode characters encoded by UTF-8.
@@ -129,7 +142,7 @@ non-ASCII characters to TeX commands (e.g. replace `é` with `\'e`)
 The program will attempt to honor your local character encoding. If that is
 not possible, it will encode as UTF-8.
 
-### Requirements
+### Python and system requirements
 
 Works with Python 2.7 or higher and has no dependencies. Also runs on
 Python 2.6, but you will need to install the
