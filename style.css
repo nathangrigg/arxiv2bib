@@ -5,7 +5,7 @@ body {
   font:14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
   color:#666;
   font-weight:300;
-  width: 800px;
+  width: 730px;
   margin: 0 auto;
 }
 
@@ -100,20 +100,26 @@ small {
   font-size:11px;
 }
 
-@media print {
+@media print, screen and (max-width: 650px) {
 
   div.main {
     width:auto;
     margin:0;
   }
 
+  nav {
+    float: none;
+    background-color: inherit;
+    border: none;
+    width: auto;
+    padding: 0;
+  }
+}
+
+@media print {
   body {
     padding:0.4in;
     font-size:12pt;
     color:#444;
-  }
-
-  nav {
-    display: none;
   }
 }
