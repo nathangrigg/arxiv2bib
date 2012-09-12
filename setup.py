@@ -17,7 +17,7 @@ else:
 
 setup(
     name = "arxiv2bib",
-    version = "0.1.2",
+    version = "1.0.0",
     description = "Get arXiv.org metadata in BibTeX format",
     author = "Nathan Grigg",
     author_email = "nathan@nathanamy.org",
@@ -33,7 +33,7 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
         "Topic :: Text Processing :: Markup :: LaTeX",
         "Environment :: Console"
