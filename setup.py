@@ -1,10 +1,19 @@
 from distutils.core import setup
+import platform, shutil
+
 
 try:
     from distutils.command.build_py import build_py_2to3 as build_py
 except ImportError:
     # 2.x
     from distutils.command.build_py import build_py
+
+# Add .py extension if on windows
+if platform.system() == 'Windows':
+    shutil.copy('arxiv2bib.py', 'scripts/arxiv2bib.py')
+    scripts = ['scripts/arxiv2bib.py']
+else:
+    scripts = ['scripts/arxiv2bib']
 
 setup(
     name = "arxiv2bib",
@@ -15,7 +24,7 @@ setup(
     url = "http://nathan11g.github.com/arxiv2bib",
     py_modules = ["arxiv2bib"],
     keywords = ["arxiv", "bibtex", "latex", "citation"],
-    scripts = ['scripts/arxiv2bib'],
+    scripts = scripts,
     license = "BSD",
     cmdclass = {'build_py': build_py},
     classifiers = [

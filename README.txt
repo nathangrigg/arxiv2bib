@@ -17,10 +17,13 @@ Download the source and use setup.py::
     $ python setup.py install
 
 If you cannot install, you can use arxiv2bib.py as a standalone executable.
+A Windows installer is available at http://pypi.python.org/pypi/arxiv2bib/ .
 
 
 Examples
 --------
+
+On Windows, replace arxiv2bib with arxiv2bib.py in each of the following.
 
 Basic usage::
 
