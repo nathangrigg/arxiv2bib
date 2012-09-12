@@ -17,7 +17,7 @@ Download the source and use setup.py::
     $ python setup.py install
 
 If you cannot install, you can use arxiv2bib.py as a standalone executable.
-A Windows installer is available at http://pypi.python.org/pypi/arxiv2bib/ .
+A Windows installer is available at http://pypi.python.org/pypi/arxiv2bib/.
 
 
 Examples
@@ -44,3 +44,6 @@ Use a list of papers from a text file (one per line)::
 More information::
 
     $ arxiv2bib --help
+
+If you have further questions, see the documentation at 
+http://nathan11g.github.com/arxiv2bib.
