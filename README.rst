@@ -8,11 +8,11 @@ Use pip::
 
     $ pip install arxiv2bib
 
-Use easy install::
+Or use easy install::
 
     $ easy_install arxiv2bib
 
-Download the source and use setup.py::
+Or download the source and use setup.py::
 
     $ python setup.py install
 
@@ -43,5 +43,5 @@ More information::
 
     $ arxiv2bib --help
 
-If you have further questions, see the documentation at 
+If you have further questions, see the documentation at
 http://nathan11g.github.com/arxiv2bib.
