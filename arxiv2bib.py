@@ -333,13 +333,14 @@ For more information, see http://arxiv.org/help/robots.
 
     # print it out
     output = os.linesep.join(output)
-    try:
-        print output
-    except UnicodeEncodeError:
-        print_bytes((output + os.linesep).encode('utf-8'))
-        if args.verbose:
-            sys.stderr.write(
-              'Could not use system encoding; using utf-8' + os.linesep)
+    if output:
+        try:
+            print output
+        except UnicodeEncodeError:
+            print_bytes((output + os.linesep).encode('utf-8'))
+            if args.verbose:
+                sys.stderr.write(
+                  'Could not use system encoding; using utf-8' + os.linesep)
 
     # print error messages
     if errors == len(bib):
