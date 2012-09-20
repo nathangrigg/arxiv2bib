@@ -23,8 +23,6 @@ A Windows installer is available at http://pypi.python.org/pypi/arxiv2bib/.
 Examples
 --------
 
-On Windows, replace arxiv2bib with arxiv2bib.py in each of the following.
-
 Basic usage::
 
     $ arxiv2bib 1001.1001

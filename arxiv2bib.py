@@ -43,7 +43,7 @@ import re
 import os
 
 if sys.version_info < (2, 6):
-    sys.exit("Python 2.6 or higher required")
+    raise Exception("Python 2.6 or higher required")
 
 # Namespaces
 ATOM ='{http://www.w3.org/2005/Atom}'
@@ -262,7 +262,7 @@ def parse_args():
     try:
         import argparse
     except:
-        sys.exit("Cannot load required module 'argparse'")
+        return("Cannot load required module 'argparse'")
 
     parser = argparse.ArgumentParser(
       description="Get the BibTeX for each arXiv id.",
@@ -288,7 +288,7 @@ def print_bytes(s):
     else:
         sys.stdout.buffer.write(s)
 
-def run_from_command_line():
+def main():
     args = parse_args()
 
     if len(args.id) == 0:
@@ -314,10 +314,10 @@ For more information, see http://arxiv.org/help/robots.
         else:
             sys.stderr.write(
               "HTTP Connection Error: {0}".format(error.getcode()))
-        sys.exit(2)
+        return 2
     except FatalError as error:
         sys.stderr.write(error + os.linesep)
-        sys.exit(2)
+        return 2
 
     errors = 0
     output = []
@@ -333,22 +333,23 @@ For more information, see http://arxiv.org/help/robots.
 
     # print it out
     output = os.linesep.join(output)
-    try:
-        print output
-    except UnicodeEncodeError:
-        print_bytes((output + os.linesep).encode('utf-8'))
-        if args.verbose:
-            sys.stderr.write(
-              'Could not use system encoding; using utf-8' + os.linesep)
+    if output:
+        try:
+            print output
+        except UnicodeEncodeError:
+            print_bytes((output + os.linesep).encode('utf-8'))
+            if args.verbose:
+                sys.stderr.write(
+                  'Could not use system encoding; using utf-8' + os.linesep)
 
     # print error messages
     if errors == len(bib):
         sys.stderr.write("Error: No successful matches" + os.linesep)
-        sys.exit(2)
+        return 2
     elif errors > 0:
         sys.stderr.write("Error: %s of %s matched succesfully" % \
           (len(bib)-errors, len(bib)) + os.linesep)
-        sys.exit(1)
+        return 1
 
 if __name__ == "__main__":
-    run_from_command_line()
+    sys.exit(main())
