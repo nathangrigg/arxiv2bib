@@ -1,3 +1,27 @@
+"""\
+Provides a command line tool to get metadata for an academic paper
+posted at arXiv.org in BibTeX format.
+
+Transform this::
+
+    $ arxiv2bib 1001.1001
+
+Into this::
+
+    @article{1001.1001v1,
+    Author        = {Philip G. Judge},
+    Title         = {The chromosphere: gateway to the corona,
+      or the purgatory of solar physics?},
+    Eprint        = {1001.1001v1},
+    ArchivePrefix = {arXiv},
+    PrimaryClass  = {astro-ph.SR},
+    Abstract      = {I outline curious observations which I personally
+    find puzzling and deserving of attention.},
+    Year          = {2010},
+    Month         = {Jan}
+    }
+"""
+
 import sys
 try: from setuptools import setup
 except ImportError: sys.exit("""Error: Setuptools is required for installation.
@@ -35,29 +59,5 @@ setup(
         "Topic :: Text Processing :: Markup :: LaTeX",
         "Environment :: Console"
         ],
-    long_description = """\
-Provides a command line tool to get metadata for an academic paper
-posted at arXiv.org in BibTeX format.
-
-Transform this::
-
-    $ arxiv2bib 1001.1001
-
-Into this::
-
-    @article{1001.1001v1,
-    Author        = {Philip G. Judge},
-    Title         = {The chromosphere: gateway to the corona, or the purgatory of solar
-      physics?},
-    Eprint        = {1001.1001v1},
-    ArchivePrefix = {arXiv},
-    PrimaryClass  = {astro-ph.SR},
-    Abstract      = {I argue that one should attempt to understand the solar chromosphere not only
-    for its own sake, but also if one is interested in the physics of: the corona;
-    astrophysical dynamos; space weather; partially ionized plasmas; heliospheric
-    UV radiation; the transition region. I outline curious observations which I
-    personally find puzzling and deserving of attention.},
-    Year          = {2010},
-    Month         = {Jan}
-    }
-""")
+    long_description = __doc__,
+)
