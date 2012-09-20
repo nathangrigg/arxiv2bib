@@ -1,5 +1,0 @@
-#!/usr/bin/env python
-
-from arxiv2bib import run_from_command_line
-
-run_from_command_line()
