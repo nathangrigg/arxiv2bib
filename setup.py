@@ -28,11 +28,9 @@ except ImportError: sys.exit("""Error: Setuptools is required for installation.
  -> http://pypi.python.org/pypi/setuptools
  or http://pypi.python.org/pypi/distribute""")
 
-try:
-    from distutils.command.build_py import build_py_2to3 as build_py
-except ImportError:
-    # 2.x
-    from distutils.command.build_py import build_py
+extra = {}
+if sys.version_info >= (3,):
+    extra['use_2to3'] = True
 
 setup(
     name = "arxiv2bib",
@@ -47,7 +45,6 @@ setup(
         'console_scripts': ['arxiv2bib = arxiv2bib:main']
     },
     license = "BSD",
-    cmdclass = {'build_py': build_py},
     classifiers = [
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
@@ -60,4 +57,5 @@ setup(
         "Environment :: Console"
         ],
     long_description = __doc__,
+    **extra
 )
