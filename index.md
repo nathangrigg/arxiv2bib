@@ -39,9 +39,6 @@ If you cannot install, you can use `arxiv2bib.py` as a standalone executable.
 
 ## Examples
 
-If you are using Windows, replace `arxiv2bib` with `arxiv2bib.py` in each
-of the following.
-
 Get the BibTeX for a single paper:
 
     $ arxiv2bib 1001.1001
@@ -105,8 +102,8 @@ The program will generally make a single call to the arXiv API per run,
 even if you request hundreds of papers.
 
 If you run the program repeatedly (for example, in a for loop), you will
-make repeated calls to the API, putting strain on the arXiv server. 
-If this becomes a problem, the API may block your IP address. 
+make repeated calls to the API, putting strain on the arXiv server.
+If this becomes a problem, the API may block your IP address.
 For more information, see <http://arxiv.org/help/robots>.
 
 ### The comments option
