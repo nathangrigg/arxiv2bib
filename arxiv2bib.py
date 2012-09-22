@@ -248,7 +248,7 @@ def arxiv2bib_dict(id_list):
         try:
             ref = Reference(entry)
         except ReferenceError as error:
-            message, id = error
+            message, id = error.args
             ref = ReferenceErrorInfo(message, id)
         if ref.id:
             d[ref.id] = ref
