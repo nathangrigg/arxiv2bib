@@ -4,7 +4,6 @@
 
 import arxiv2bib as a2b
 from unittest import TestCase, main
-import zlib, base64
 
 class testValidityCheck(TestCase):
     def test_new_style(self):
@@ -43,7 +42,7 @@ class testArxiv2Bib(TestCase):
 
 class testParsing(TestCase):
     def setUp(self):
-        self.xml = zlib.decompress(base64.decodestring(DATA))
+        self.xml = DATA
         self.refs = a2b.ElementTree.fromstring(self.xml).findall(a2b.ATOM + "entry")
     def test_parse_first_entry(self):
         self.assertTrue(len(self.refs) >= 1)
@@ -58,38 +57,77 @@ class testParsing(TestCase):
         self.assertEqual(data, should_match)
         self.assertEqual(ref.bibtex()[:21], '@article{1205.1001v1,')
 
-DATA = """
-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
-r9Q="""
-
+DATA = """<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <link href="http://arxiv.org/api/query?search_query%3D%26id_list%3D1205.1001v1%2C1001.1001v1%26start%3D0%26max_results%3D10" rel="self" type="application/atom+xml"/>
+  <title type="html">ArXiv Query: search_query=&amp;id_list=1205.1001v1,1001.1001v1&amp;start=0&amp;max_results=10</title>
+  <id>http://arxiv.org/api/NkeXEv4rDF4SylztF53oHCI2fdo</id>
+  <updated>2012-08-09T00:00:00-04:00</updated>
+  <opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">2</opensearch:totalResults>
+  <opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">0</opensearch:startIndex>
+  <opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">10</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/1205.1001v1</id>
+    <updated>2012-05-04T16:23:05Z</updated>
+    <published>2012-05-04T16:23:05Z</published>
+    <title>Membrane lateral structure: The influence of immobilized particles on
+  domain size</title>
+    <summary>  In experiments on model membranes, a formation of large domains of different
+lipid composition is readily observed. However, no such phase separation is
+observed in the membranes of intact cells. Instead, a structure of small
+transient inhomogeneities called lipid rafts are expected in these systems. One
+of the numerous attempts to explain small domains refers to the coupling of the
+membrane to its surroundings, which leads to the immobilization of some of the
+membrane molecules. These immobilized molecules then act as static obstacles
+for the remaining mobile ones. We present detailed Molecular Dynamics
+simulations demonstrating that this can indeed account for small domains. This
+confirms previous Monte Carlo studies based on simplified models. Furthermore,
+by directly comparing domain structures obtained using Molecular Dynamics to
+Monte Carlo simulations of the Ising model, we demonstrate that domain
+formation in the presence of obstacles is remarkably insensitive to the details
+of the molecular interactions.
+</summary>
+    <author>
+      <name>Timo Fischer</name>
+    </author>
+    <author>
+      <name>H. Jelger Risselada</name>
+    </author>
+    <author>
+      <name>Richard L. C. Vink</name>
+    </author>
+    <arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom">submitted to PCCP</arxiv:comment>
+    <link href="http://arxiv.org/abs/1205.1001v1" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/1205.1001v1" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cond-mat.soft" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cond-mat.soft" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.bio-ph" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1001.1001v1</id>
+    <updated>2010-01-06T22:12:29Z</updated>
+    <published>2010-01-06T22:12:29Z</published>
+    <title>The chromosphere: gateway to the corona, or the purgatory of solar
+  physics?</title>
+    <summary>  I argue that one should attempt to understand the solar chromosphere not only
+for its own sake, but also if one is interested in the physics of: the corona;
+astrophysical dynamos; space weather; partially ionized plasmas; heliospheric
+UV radiation; the transition region. I outline curious observations which I
+personally find puzzling and deserving of attention.
+</summary>
+    <author>
+      <name>Philip G. Judge</name>
+    </author>
+    <arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom">To appear in the proceedings of the 25th NSO Workshop "Chromospheric
+  Structure and Dynamics. From Old Wisdom to New Insights", Memorie della
+  Societa' Astronomica Italiana, Eds. Tritschler et al</arxiv:comment>
+    <link href="http://arxiv.org/abs/1001.1001v1" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/1001.1001v1" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="astro-ph.SR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.SR" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>
+"""
 
 if __name__ == "__main__":
     main()
