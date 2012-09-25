@@ -46,7 +46,7 @@ if sys.version_info < (2, 6):
     raise Exception("Python 2.6 or higher required")
 
 # Namespaces
-ATOM ='{http://www.w3.org/2005/Atom}'
+ATOM = '{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
 
 # regular expressions to check if arxiv id is valid
@@ -83,15 +83,19 @@ OLD_STYLE = re.compile(r"""(?x)
       |NT|NA|OA|OC|PR|QA|RT|RA|SP|ST|SG))?
 )/\d{7}(v\d+)?$""")
 
+
 def is_valid(arxiv_id):
     """Checks if id resembles a valid arxiv identifier."""
     return bool(NEW_STYLE.match(arxiv_id)) or bool(OLD_STYLE.match(arxiv_id))
 
+
 class FatalError(Exception):
-    pass
+    """Error that prevents us from continuing"""
+
 
 class NotFoundError(Exception):
-    pass
+    """Reference not found by the arxiv API"""
+
 
 class Reference(object):
     """Represents a single reference.
@@ -102,13 +106,13 @@ class Reference(object):
     def __init__(self, entry_xml):
         self.xml = entry_xml
         self.id = self._id()
-        self.authors  = self._authors()
-        self.title    = self._field_text('title')
+        self.authors = self._authors()
+        self.title = self._field_text('title')
         if len(self.id) == 0 or len(self.authors) == 0 or len(self.title) == 0:
             raise NotFoundError("No such publication", self.id)
-        self.summary  = self._field_text('summary')
+        self.summary = self._field_text('summary')
         self.category = self._category()
-        self.year,self.month = self._published()
+        self.year, self.month = self._published()
         self.updated = self._field_text('updated')
         self.bare_id = self.id[:self.id.rfind('v')]
         self.note = self._field_text('journal_ref', namespace=ARXIV)
@@ -121,7 +125,7 @@ class Reference(object):
     def _field_text(self, id, namespace=ATOM):
         """Extracts text from arbitrary xml field"""
         try:
-            return self.xml.find(namespace+id).text.strip()
+            return self.xml.find(namespace + id).text.strip()
         except:
             return ""
 
@@ -135,7 +139,7 @@ class Reference(object):
     def _id(self):
         """Get arxiv id"""
         try:
-            id_url=self._field_text('id')
+            id_url = self._field_text('id')
             return id_url[id_url.find('/abs/') + 5:]
         except:
             return ""
@@ -145,10 +149,10 @@ class Reference(object):
         published = self._field_text('published')
         if len(published) < 7:
             return "", ""
-        y,m = published[:4], published[5:7]
+        y, m = published[:4], published[5:7]
         try:
-            m = ["Jan","Feb","Mar","Apr","May","Jun","Jul",
-                 "Aug","Sep","Nov","Dec"][int(m)-1]
+            m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+                 "Aug", "Sep", "Nov", "Dec"][int(m) - 1]
         except:
             pass
         return y, m
@@ -156,8 +160,8 @@ class Reference(object):
     def bibtex(self):
         """BibTex string of the reference."""
 
-        lines = ["@article{" + self.id ]
-        for k,v in [("Author", " and ".join(self.authors)),
+        lines = ["@article{" + self.id]
+        for k, v in [("Author", " and ".join(self.authors)),
                     ("Title", self.title),
                     ("Eprint", self.id),
                     ("ArchivePrefix", "arXiv"),
@@ -167,9 +171,10 @@ class Reference(object):
                     ("Month", self.month),
                     ("Note", self.note)]:
             if len(v):
-                lines.append("%-13s = {%s}" % (k,v))
+                lines.append("%-13s = {%s}" % (k, v))
 
         return ("," + os.linesep).join(lines) + os.linesep + "}"
+
 
 class ReferenceErrorInfo(object):
     """Contains information about a reference error"""
@@ -189,6 +194,7 @@ class ReferenceErrorInfo(object):
         return "Error: %(message)s (%(id)s)" % \
                 {'id': self.id, 'message': self.message}
 
+
 def arxiv2bib(id_list):
     """Returns a list of references, corresponding to elts of id_list"""
     d = arxiv2bib_dict(id_list)
@@ -201,6 +207,7 @@ def arxiv2bib(id_list):
 
     return l
 
+
 def arxiv_request(ids):
     """Sends a request to the arxiv API."""
     q = urlencode([
@@ -212,10 +219,11 @@ def arxiv_request(ids):
     # to unicode when needed (python2) or string (python3)
     return ElementTree.fromstring(xml.read())
 
+
 def arxiv2bib_dict(id_list):
     """Fetches citations for ids in id_list into a dictionary indexed by id"""
-    ids=[]
-    d={}
+    ids = []
+    d = {}
 
     # validate ids
     for id in id_list:
@@ -242,11 +250,10 @@ def arxiv2bib_dict(id_list):
             break
 
         try:
-            id = entries[0].find(ATOM+"summary").text.split()[-1]
+            id = entries[0].find(ATOM + "summary").text.split()[-1]
             del(ids[ids.index(id)])
         except:
             raise FatalError("Unable to parse an error returned by arXiv.org.")
-
 
     # Parse each reference and store it in dictionary
     for entry in entries:
@@ -263,6 +270,7 @@ def arxiv2bib_dict(id_list):
 
     return d
 
+
 def parse_args():
     try:
         import argparse
@@ -276,7 +284,7 @@ Returns 0 on success, 1 on partial failure, 2 on total failure.
 Valid BibTeX is written to stdout, error messages to stderr.
 If no arguments are given, ids are read from stdin, one per line.""",
       formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('id',metavar='arxiv_id',nargs="*",
+    parser.add_argument('id', metavar='arxiv_id', nargs="*",
       help="arxiv identifier, such as 1201.1213")
     parser.add_argument('-c', '--comments', action='store_true',
       help="Include @comment fields with error details")
@@ -286,12 +294,14 @@ If no arguments are given, ids are read from stdin, one per line.""",
       help="Display more error messages")
     return parser.parse_args()
 
+
 def print_bytes(s):
     """Print bytes to stdout in Python 2 or 3"""
     if sys.version_info[0] == 2:
         sys.stdout.write(s)
     else:
         sys.stdout.buffer.write(s)
+
 
 def main():
     args = parse_args()
@@ -352,8 +362,8 @@ For more information, see http://arxiv.org/help/robots.
         sys.stderr.write("Error: No successful matches" + os.linesep)
         return 2
     elif errors > 0:
-        sys.stderr.write("Error: %s of %s matched succesfully" % \
-          (len(bib)-errors, len(bib)) + os.linesep)
+        sys.stderr.write("Error: %s of %s matched succesfully" %
+          (len(bib) - errors, len(bib)) + os.linesep)
         return 1
 
 if __name__ == "__main__":
