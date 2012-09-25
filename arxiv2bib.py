@@ -85,7 +85,7 @@ def is_valid(id):
 class FatalError(Exception):
     pass
 
-class ReferenceError(Exception):
+class NotFoundError(Exception):
     pass
 
 class Reference(object):
@@ -100,7 +100,7 @@ class Reference(object):
         self.authors  = self._authors()
         self.title    = self._field_text('title')
         if len(self.id) == 0 or len(self.authors) == 0 or len(self.title) == 0:
-            raise ReferenceError("No such publication", self.id)
+            raise NotFoundError("No such publication", self.id)
         self.summary  = self._field_text('summary')
         self.category = self._category()
         self.year,self.month = self._published()
@@ -247,7 +247,7 @@ def arxiv2bib_dict(id_list):
     for entry in entries:
         try:
             ref = Reference(entry)
-        except ReferenceError as error:
+        except NotFoundError as error:
             message, id = error.args
             ref = ReferenceErrorInfo(message, id)
         if ref.id:
