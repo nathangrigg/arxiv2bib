@@ -44,7 +44,6 @@ setup(
     entry_points = {
         'console_scripts': ['arxiv2bib = arxiv2bib:main']
     },
-    test_suite = 'test',
     license = "BSD",
     classifiers = [
         "Programming Language :: Python :: 2",
