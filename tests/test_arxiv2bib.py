@@ -5,18 +5,43 @@
 import arxiv2bib as a2b
 from unittest import TestCase, main
 
-class testValidityCheck(TestCase):
-    def test_new_style(self):
-        self.assertTrue(a2b.is_valid("1203.1230"))
-        self.assertTrue(a2b.is_valid("1012.1230v3"))
-        self.assertTrue(a2b.is_valid("1301.1230v199"))
-        self.assertFalse(a2b.is_valid("1111.1111v"))
-    def test_old_style(self):
-        valid = ["math/0409434", "astro-ph/0302530", "quant-ph/0612147",
-          "hep-th/0612093", "cs/0612047", "hep-ph/0610206",
-          "physics.space-ph/0123154", "cond-mat.stat/1021324"]
-        for v in valid: self.assertTrue(a2b.is_valid(v))
-        self.assertFalse(a2b.is_valid('math./1212121'))
+class testRegularExpressions(TestCase):
+    def test_new_style_no_version(self):
+        match = a2b.NEW_STYLE.match('1234.1234')
+        self.assertTrue(bool(match))
+
+    def test_new_style_with_version(self):
+        match = a2b.NEW_STYLE.match('1234.1234v1')
+        self.assertTrue(bool(match))
+
+    def test_new_style_no_match(self):
+        invalid = ['123456789', '1234.12345', '1234.1234v']
+        for x in invalid:
+            match = a2b.NEW_STYLE.match(x)
+            self.assertFalse(bool(match), x)
+
+    def test_old_style_no_subcategory(self):
+        cats = ['physics', 'stat', 'hep-ph', 'math']
+        for cat in cats:
+            match = a2b.OLD_STYLE.match(cat + '/0000000')
+            self.assertTrue(bool(match), cat)
+
+    def test_old_style_bad_subcategory(self):
+        cats = ['physics', 'stat', 'hep-ph', 'math']
+        for cat in cats:
+            match = a2b.OLD_STYLE.match(cat + '.foo/0000000')
+            self.assertFalse(bool(match), cat)
+
+    def test_old_style_good_subcategory(self):
+        subcats = ['physics.atom-ph', 'math.CO', 'stat.TH']
+        for sub in subcats:
+            match = a2b.OLD_STYLE.match(sub + '/0000000')
+            self.assertTrue(bool(match), sub)
+
+    def test_old_style_with_version(self):
+        match = a2b.OLD_STYLE.match('physics.acc-ph/0000000v2')
+        self.assertTrue(bool(match))
+
 
 class testArxiv2Bib(TestCase):
     def test_actual_request(self):
@@ -128,9 +153,6 @@ personally find puzzling and deserving of attention.
   </entry>
 </feed>
 """
-
-if __name__ == "__main__":
-    main()
 
 
 # arxiv2bib_dict: get it to throw the two fatalerrors,

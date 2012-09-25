@@ -50,37 +50,45 @@ ATOM ='{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
 
 # regular expressions to check if arxiv id is valid
-NEW_STYLE = re.compile(r'\d{4}\.\d{4}(v\d+)?$')
-OLD_STYLE_XX = re.compile(
-    r'(astro-ph)|(stat)|(q-fin)|(q-bio)|(cs)|(nlin)|(math)' +
-    r'(\.[A-Z]{2})?/\d{7}(v\d+)?$')
-physics_categories = {
-    'cond-mat': ['dis-nn','mes-hall','mtrl-sci','other','quant-gas',
-                 'soft','stat','str-el','supr-cond'],
-    'gr-qc': [],
-    'hep-ex': [],
-    'hep-lat': [],
-    'hep-ph': [],
-    'hep-th': [],
-    'nucl-ex': [],
-    'nucl-th': [],
-    'physics': ['acc-ph','ao-ph','atm-clus','atom-ph','bio-ph','chem-ph',
-                'class-ph','comp-ph','data-an','ed-ph','flu-dyn','gen-ph',
-                'geo-ph','hist-ph','ins-det','med-ph','optics','plasm-ph',
-                'pop-ph','soc-ph','space-ph'],
-    'quant-ph': []}
-OLD_STYLE_PH = re.compile(r"([a-z\-]+)(\.([a-z\-]+))?/\d{7}(v\d+)?$")
+def sub_cat_re(cat, subcats):
+    """Create a regular expression for all subcategories of a category"""
+    if subcats:
+        return r'{0}(\.({1}))?'.format(cat, '|'.join(subcats.split()))
+    else:
+        return cat
 
-def is_valid(id):
+
+SUBCATEGORIES = {
+    'stat': 'AP CO ML ME TH',
+    'q-bio': 'BM CB GN MN NC OT PE QM SC TO',
+    'cs': 'AR AI CL CC CE CG GT CV CY CR DS DB DL DM DC GL GR HC IR IT ' +
+      'LG LO MS MA MM NI NE NA OS OH PF PL RO SE SD SC',
+    'nlin': 'AO CG CD SI PS',
+    'math': 'AG AT AP CT CA CO AC CV DG DS FA GM GN GT GR HO IT KT LO MP ' +
+      'MG NT NA OA OC PR QA RT RA SP ST SG',
+    'astro-ph': '',
+    'cond-mat': 'dis-nn mes-hall mtrl-sci other soft stat-mech str-el supr-con',
+    'gr-qc': '',
+    'hep-ex': '',
+    'hep-lat': '',
+    'hep-ph': '',
+    'hep-th': '',
+    'math-ph': '',
+    'nucl-ex': '',
+    'nucl-th': '',
+    'quant-ph': '',
+    'physics': 'acc-ph ao-ph atom-ph atm-clus bio-ph chem-ph class-ph comp-ph ' +
+        'data-an flu-dyn gen-ph geo-ph hist-ph ins-det med-ph optics ed-ph ' +
+        'soc-ph plasm-ph pop-ph space-ph',
+}
+OLD_STYLE = re.compile('^(' +
+  '|'.join(sub_cat_re(cat, subcats) for cat, subcats in SUBCATEGORIES.items())
+   + ')/\d{7}(v\d+)?$')
+NEW_STYLE = re.compile(r'^\d{4}\.\d{4}(v\d+)?$')
+
+def is_valid(arxiv_id):
     """Checks if id resembles a valid arxiv identifier."""
-    if NEW_STYLE.match(id) is not None or OLD_STYLE_XX.match(id) is not None:
-        return True
-    match = OLD_STYLE_PH.match(id)
-    if match is not None and match.group(1) in physics_categories:
-        if match.group(3) is None or \
-        match.group(3) in physics_categories[match.group(1)]:
-            return True
-    return False
+    return bool(NEW_STYLE.match(arxiv_id)) or bool(OLD_STYLE.match(arxiv_id))
 
 class FatalError(Exception):
     pass
