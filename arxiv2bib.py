@@ -290,7 +290,6 @@ class Cli(object):
         self.error_count = 0
         self.code = 0
 
-
     def run(self):
         """Produce output and error messages"""
         try:
@@ -311,7 +310,6 @@ class Cli(object):
         self.create_output(bib)
         self.code = self.tally_errors(bib)
 
-
     def create_output(self, bib):
         """Format the output and error messages"""
         for b in bib:
@@ -324,7 +322,6 @@ class Cli(object):
             else:
                 self.output.append(b.bibtex())
 
-
     def print_output(self):
         if not self.output:
             return
@@ -334,10 +331,9 @@ class Cli(object):
             print output_string
         except UnicodeEncodeError:
             self.print_bytes((output_string + os.linesep).encode('utf-8'))
-            if verbose:
+            if self.args.verbose:
                 self.messages.append(
                   'Could not use system encoding; using utf-8')
-
 
     def tally_errors(self, bib):
         """calculate error code"""
@@ -356,7 +352,6 @@ class Cli(object):
         if self.messages:
             self.messages.append("")
             sys.stderr.write(os.linesep.join(self.messages))
-
 
     @staticmethod
     def print_bytes(s):

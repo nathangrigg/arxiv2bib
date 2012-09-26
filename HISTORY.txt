@@ -1,0 +1,13 @@
+1.0.2
+- Bug fixes for Python 3 error handling
+- Better validation of old-style arxiv id numbers
+
+1.0.1
+- Better packaging with setuptools
+- Setup now creates arxiv2bib.exe on Windows
+
+1.0.0
+- Include Windows Installer
+
+0.1.2
+- First release to PyPI
