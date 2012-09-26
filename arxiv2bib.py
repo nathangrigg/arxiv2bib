@@ -271,100 +271,139 @@ def arxiv2bib_dict(id_list):
     return d
 
 
-def parse_args():
-    try:
-        import argparse
-    except:
-        return("Cannot load required module 'argparse'")
+class Cli(object):
+    """Command line interface"""
 
-    parser = argparse.ArgumentParser(
-      description="Get the BibTeX for each arXiv id.",
-      epilog="""\
-Returns 0 on success, 1 on partial failure, 2 on total failure.
-Valid BibTeX is written to stdout, error messages to stderr.
-If no arguments are given, ids are read from stdin, one per line.""",
-      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('id', metavar='arxiv_id', nargs="*",
-      help="arxiv identifier, such as 1201.1213")
-    parser.add_argument('-c', '--comments', action='store_true',
-      help="Include @comment fields with error details")
-    parser.add_argument('-q', '--quiet', action='store_true',
-      help="Display fewer error messages")
-    parser.add_argument('-v', '--verbose', action="store_true",
-      help="Display more error messages")
-    return parser.parse_args()
+    def __init__(self, args=None):
+        """Parse arguments"""
+        self.args = self.parse_args(args)
+
+        if len(self.args.id) == 0:
+            self.args.id = [line.strip() for line in sys.stdin]
+
+        # avoid duplicate error messages unless verbose is set
+        if self.args.comments and not self.args.verbose:
+            self.args.quiet = True
+
+        self.output = []
+        self.messages = []
+        self.error_count = 0
+        self.code = 0
 
 
-def print_bytes(s):
-    """Print bytes to stdout in Python 2 or 3"""
-    if sys.version_info[0] == 2:
-        sys.stdout.write(s)
-    else:
-        sys.stdout.buffer.write(s)
-
-
-def main():
-    args = parse_args()
-
-    if len(args.id) == 0:
-        id_list = [line.strip() for line in sys.stdin.readlines()]
-    else:
-        id_list = args.id
-
-    # avoid duplicate error messages unless verbose is set
-    if args.comments and not args.verbose:
-        args.quiet = True
-
-    try:
-        bib = arxiv2bib(id_list)
-    except HTTPError as error:
-        if error.getcode() == 403:
-            sys.stderr.write("""\
-403 Forbidden error. This usually happens when you make many
-rapid fire requests in a row. If you continue to do this, arXiv.org may
-interpret your requests as a denial of service attack.
-
-For more information, see http://arxiv.org/help/robots.
-""")
-        else:
-            sys.stderr.write(
-              "HTTP Connection Error: {0}".format(error.getcode()))
-        return 2
-    except FatalError as error:
-        sys.stderr.write(error + os.linesep)
-        return 2
-
-    errors = 0
-    output = []
-    for b in bib:
-        if type(b) is ReferenceErrorInfo:
-            errors += 1
-            if args.comments:
-                output.append(b.bibtex())
-            if not args.quiet:
-                sys.stderr.write(str(b) + os.linesep)
-        else:
-            output.append(b.bibtex())
-
-    # print it out
-    output = os.linesep.join(output)
-    if output:
+    def run(self):
+        """Produce output and error messages"""
         try:
-            print output
-        except UnicodeEncodeError:
-            print_bytes((output + os.linesep).encode('utf-8'))
-            if args.verbose:
-                sys.stderr.write(
-                  'Could not use system encoding; using utf-8' + os.linesep)
+            bib = arxiv2bib(self.args.id)
+        except HTTPError as error:
+            if error.getcode() == 403:
+                raise FatalError("""\
+    403 Forbidden error. This usually happens when you make many
+    rapid fire requests in a row. If you continue to do this, arXiv.org may
+    interpret your requests as a denial of service attack.
 
-    # print error messages
-    if errors == len(bib):
-        sys.stderr.write("Error: No successful matches" + os.linesep)
+    For more information, see http://arxiv.org/help/robots.
+    """)
+            else:
+                raise FatalError(
+                  "HTTP Connection Error: {0}".format(error.getcode()))
+
+        self.create_output(bib)
+        self.code = self.tally_errors(bib)
+
+
+    def create_output(self, bib):
+        """Format the output and error messages"""
+        for b in bib:
+            if isinstance(b, ReferenceErrorInfo):
+                self.error_count += 1
+                if self.args.comments:
+                    self.output.append(b.bibtex())
+                if not self.args.quiet:
+                    self.messages.append(str(b))
+            else:
+                self.output.append(b.bibtex())
+
+
+    def print_output(self):
+        if not self.output:
+            return
+
+        output_string = os.linesep.join(self.output)
+        try:
+            print output_string
+        except UnicodeEncodeError:
+            self.print_bytes((output_string + os.linesep).encode('utf-8'))
+            if verbose:
+                self.messages.append(
+                  'Could not use system encoding; using utf-8')
+
+
+    def tally_errors(self, bib):
+        """calculate error code"""
+        if self.error_count == len(self.args.id):
+            self.messages.append("No successful matches")
+            return 2
+        elif self.error_count > 0:
+            self.messages.append("%s of %s matched succesfully" %
+              (len(bib) - self.error_count, len(bib)))
+            return 1
+        else:
+            return 0
+
+    def print_messages(self):
+        """print messages to stderr"""
+        if self.messages:
+            self.messages.append("")
+            sys.stderr.write(os.linesep.join(self.messages))
+
+
+    @staticmethod
+    def print_bytes(s):
+        """Print bytes to stdout in Python 2 or 3"""
+        if sys.version_info[0] == 2:
+            sys.stdout.write(s)
+        else:
+            sys.stdout.buffer.write(s)
+
+    @staticmethod
+    def parse_args(args):
+        try:
+            import argparse
+        except:
+            sys.exit("Cannot load required module 'argparse'")
+
+        parser = argparse.ArgumentParser(
+          description="Get the BibTeX for each arXiv id.",
+          epilog="""\
+    Returns 0 on success, 1 on partial failure, 2 on total failure.
+    Valid BibTeX is written to stdout, error messages to stderr.
+    If no arguments are given, ids are read from stdin, one per line.""",
+          formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser.add_argument('id', metavar='arxiv_id', nargs="*",
+          help="arxiv identifier, such as 1201.1213")
+        parser.add_argument('-c', '--comments', action='store_true',
+          help="Include @comment fields with error details")
+        parser.add_argument('-q', '--quiet', action='store_true',
+          help="Display fewer error messages")
+        parser.add_argument('-v', '--verbose', action="store_true",
+          help="Display more error messages")
+        return parser.parse_args(args)
+
+
+def main(args=None):
+    """Run the command line interface"""
+    cli = Cli(args)
+    try:
+        cli.run()
+    except FatalError as err:
+        sys.stderr.write(err.args[0] + os.linesep)
         return 2
-    elif errors > 0:
-        sys.stderr.write("Error: %s of %s matched succesfully" %
-          (len(bib) - errors, len(bib)) + os.linesep)
-        return 1
+
+    cli.print_output()
+    cli.print_messages()
+    return cli.code
+
 
 if __name__ == "__main__":
     sys.exit(main())
