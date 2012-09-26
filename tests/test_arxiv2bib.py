@@ -9,6 +9,7 @@ try:
 except ImportError:
     from io import StringIO
 
+# provides fake data for 1001.1001v1 and 1205.1001v1
 DATA = """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <link href="http://arxiv.org/api/query?search_query%3D%26id_list%3D1205.1001v1%2C1001.1001v1%26start%3D0%26max_results%3D10" rel="self" type="application/atom+xml"/>
@@ -82,7 +83,32 @@ personally find puzzling and deserving of attention.
 """
 fakedata = patch('arxiv2bib.arxiv_request',
   return_value=ElementTree.fromstring(DATA))
-fakedata.start() # provides fake data for 1001.1001v1 and 1205.1001v1
+
+
+class testArxivRequest(unittest.TestCase):
+    @patch('arxiv2bib.urlopen', return_value=Mock(read=lambda:DATA))
+    def test_arxiv_request_encode_url(self, mock_urlopen):
+        output = a2b.arxiv_request(['a', 'b'])
+        expected = 'http://export.arxiv.org/api/query?id_list=a%2Cb&max_results=2'
+        mock_urlopen.assert_called_with(expected)
+
+    @patch('arxiv2bib.urlopen', side_effect=a2b.HTTPError(None, 403, None, None, None))
+    def test_catch_403_error(self, mock_uo):
+        cli = a2b.Cli(['0000.0000'])
+        with self.assertRaises(a2b.FatalError):
+            cli.run()
+
+    @patch('arxiv2bib.urlopen')
+    def test_no_unneccesary_API_call(self, mock_uo):
+        cli = a2b.Cli(['x'])
+        mock_uo.assert_not_called()
+
+    @patch('arxiv2bib.urlopen', side_effect=a2b.HTTPError(None, 404, None, None, None))
+    def test_catch_http_error(self, mock_uo):
+        cli = a2b.Cli(['0000.0000'])
+        with self.assertRaises(a2b.FatalError):
+            cli.run()
+
 
 class testRegularExpressions(unittest.TestCase):
     def test_new_style_no_version(self):
@@ -130,10 +156,15 @@ class testRegularExpressions(unittest.TestCase):
     def test_is_valid_return_false(self):
         self.assertFalse(a2b.is_valid('a'))
 
+
 class testArxiv2Bib(unittest.TestCase):
     def setUp(self):
+        fakedata.start()
         result = a2b.arxiv2bib(['1011.9999', '1001.1001v1', 'x', '1205.1001'])
         self.not_found, self.judge, self.invalid, self.frv = result
+
+    def tearDown(self):
+        fakedata.stop()
 
     def test_parse_single_author(self):
         self.assertEqual(self.judge.authors, ['Philip G. Judge'])
@@ -158,7 +189,6 @@ class testArxiv2Bib(unittest.TestCase):
     def test_form_bibtex(self):
         self.assertEqual(self.frv.bibtex()[:21], '@article{1205.1001v1,')
 
-
     def test_reference_error_info(self):
         r = self.not_found
         self.assertEqual(type(r), a2b.ReferenceErrorInfo)
@@ -171,9 +201,10 @@ class testArxiv2Bib(unittest.TestCase):
         self.assertEqual(r.id, 'x')
         self.assertEqual(r.updated, '0')
 
+
 class testCLI(unittest.TestCase):
     def setUp(self):
-        pass
+        fakedata.start()
         self.vanilla = a2b.Cli(['1011.9999', '1001.1001v1', 'x'])
         self.vanilla.run()
         self.comments = a2b.Cli(['--comments', 'x'])
@@ -182,6 +213,9 @@ class testCLI(unittest.TestCase):
         self.no_errors.run()
         self.no_matches = a2b.Cli(['x'])
         self.no_matches.run()
+
+    def tearDown(self):
+        fakedata.stop()
 
     @patch('sys.stdin')
     def test_read_from_stdin(self, mock_in):
@@ -245,17 +279,4 @@ class testCLI(unittest.TestCase):
         code = a2b.main(['1001.1001'])
         self.assertEqual(code, 2)
         self.assertEqual(mock_err.getvalue().strip(), 'xxx')
-
-
-
-
-
-
-
-# arxiv2bib_dict: get it to throw the two fatalerrors,
-#see if you can come up with something that loops, test the
-#updated thing by sending a request for two versions of the same paper
-#
-# Reference: parse a couple, get it to throw the error.
-
 

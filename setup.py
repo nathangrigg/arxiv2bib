@@ -23,8 +23,10 @@ Into this::
 """
 
 import sys
-try: from setuptools import setup
-except ImportError: sys.exit("""Error: Setuptools is required for installation.
+try:
+    from setuptools import setup
+except ImportError:
+    sys.exit("""Error: Setuptools is required for installation.
  -> http://pypi.python.org/pypi/setuptools
  or http://pypi.python.org/pypi/distribute""")
 
