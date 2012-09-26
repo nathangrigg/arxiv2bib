@@ -1,86 +1,13 @@
 #! /usr/bin/env python
 
-# makes 1 call to the api
-
 import arxiv2bib as a2b
-from unittest import TestCase, main
-
-class testRegularExpressions(TestCase):
-    def test_new_style_no_version(self):
-        match = a2b.NEW_STYLE.match('1234.1234')
-        self.assertTrue(bool(match))
-
-    def test_new_style_with_version(self):
-        match = a2b.NEW_STYLE.match('1234.1234v1')
-        self.assertTrue(bool(match))
-
-    def test_new_style_no_match(self):
-        invalid = ['123456789', '1234.12345', '1234.1234v']
-        for x in invalid:
-            match = a2b.NEW_STYLE.match(x)
-            self.assertFalse(bool(match), x)
-
-    def test_old_style_no_subcategory(self):
-        cats = ['physics', 'stat', 'hep-ph', 'math']
-        for cat in cats:
-            match = a2b.OLD_STYLE.match(cat + '/0000000')
-            self.assertTrue(bool(match), cat)
-
-    def test_old_style_bad_subcategory(self):
-        cats = ['physics', 'stat', 'hep-ph', 'math']
-        for cat in cats:
-            match = a2b.OLD_STYLE.match(cat + '.foo/0000000')
-            self.assertFalse(bool(match), cat)
-
-    def test_old_style_good_subcategory(self):
-        subcats = ['physics.atom-ph', 'math.CO', 'stat.TH']
-        for sub in subcats:
-            match = a2b.OLD_STYLE.match(sub + '/0000000')
-            self.assertTrue(bool(match), sub)
-
-    def test_old_style_with_version(self):
-        match = a2b.OLD_STYLE.match('physics.acc-ph/0000000v2')
-        self.assertTrue(bool(match))
-
-
-class testArxiv2Bib(TestCase):
-    def test_actual_request(self):
-        res = a2b.arxiv2bib(['1011.9999', '1001.1001v1', 'x'])
-        self.assertEqual(len(res), 3)
-
-        r = res[0]
-        self.assertEqual(type(r), a2b.ReferenceErrorInfo)
-        self.assertEqual(r.message, 'Not found')
-        self.assertEqual(r.id, '1011.9999')
-        self.assertEqual(r.updated, '0')
-
-        r = res[1]
-        self.assertEqual(type(r), a2b.Reference)
-        self.assertEqual(r.year, '2010')
-        self.assertEqual(r.id, '1001.1001v1')
-
-        r = res[2]
-        self.assertEqual(type(r), a2b.ReferenceErrorInfo)
-        self.assertEqual(r.message, 'Invalid arXiv identifier')
-        self.assertEqual(r.id, 'x')
-        self.assertEqual(r.updated, '0')
-
-class testParsing(TestCase):
-    def setUp(self):
-        self.xml = DATA
-        self.refs = a2b.ElementTree.fromstring(self.xml).findall(a2b.ATOM + "entry")
-    def test_parse_first_entry(self):
-        self.assertTrue(len(self.refs) >= 1)
-        ref = a2b.Reference(self.refs[0])
-        data = [ref.id, ref.authors, ref.title[:26], ref.summary[:33],
-          ref.category, ref.year, ref.month, ref.updated, ref.bare_id, ref.note]
-        should_match = ['1205.1001v1',
-          ['Timo Fischer', 'H. Jelger Risselada', 'Richard L. C. Vink'],
-           'Membrane lateral structure', 'In experiments on model membranes',
-           'cond-mat.soft', '2012', 'May',
-           '2012-05-04T16:23:05Z', '1205.1001', '']
-        self.assertEqual(data, should_match)
-        self.assertEqual(ref.bibtex()[:21], '@article{1205.1001v1,')
+import unittest
+from mock import patch, Mock
+from xml.etree import ElementTree
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 DATA = """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -153,6 +80,176 @@ personally find puzzling and deserving of attention.
   </entry>
 </feed>
 """
+fakedata = patch('arxiv2bib.arxiv_request',
+  return_value=ElementTree.fromstring(DATA))
+fakedata.start() # provides fake data for 1001.1001v1 and 1205.1001v1
+
+class testRegularExpressions(unittest.TestCase):
+    def test_new_style_no_version(self):
+        match = a2b.NEW_STYLE.match('1234.1234')
+        self.assertTrue(bool(match))
+
+    def test_new_style_with_version(self):
+        match = a2b.NEW_STYLE.match('1234.1234v1')
+        self.assertTrue(bool(match))
+
+    def test_new_style_no_match(self):
+        invalid = ['123456789', '1234.12345', '1234.1234v']
+        for x in invalid:
+            match = a2b.NEW_STYLE.match(x)
+            self.assertFalse(bool(match), x)
+
+    def test_old_style_no_subcategory(self):
+        cats = ['physics', 'stat', 'hep-ph', 'math']
+        for cat in cats:
+            match = a2b.OLD_STYLE.match(cat + '/0000000')
+            self.assertTrue(bool(match), cat)
+
+    def test_old_style_bad_subcategory(self):
+        cats = ['physics', 'stat', 'hep-ph', 'math']
+        for cat in cats:
+            match = a2b.OLD_STYLE.match(cat + '.foo/0000000')
+            self.assertFalse(bool(match), cat)
+
+    def test_old_style_good_subcategory(self):
+        subcats = ['physics.atom-ph', 'math.CO', 'stat.TH']
+        for sub in subcats:
+            match = a2b.OLD_STYLE.match(sub + '/0000000')
+            self.assertTrue(bool(match), sub)
+
+    def test_old_style_with_version(self):
+        match = a2b.OLD_STYLE.match('physics.acc-ph/0000000v2')
+        self.assertTrue(bool(match))
+
+    def test_is_valid_new_style(self):
+        self.assertTrue(a2b.is_valid('0000.0000'))
+
+    def test_is_valid_old_style(self):
+        self.assertTrue(a2b.is_valid('math.CO/0000000'))
+
+    def test_is_valid_return_false(self):
+        self.assertFalse(a2b.is_valid('a'))
+
+class testArxiv2Bib(unittest.TestCase):
+    def setUp(self):
+        result = a2b.arxiv2bib(['1011.9999', '1001.1001v1', 'x', '1205.1001'])
+        self.not_found, self.judge, self.invalid, self.frv = result
+
+    def test_parse_single_author(self):
+        self.assertEqual(self.judge.authors, ['Philip G. Judge'])
+
+    def test_parse_multiple_authors(self):
+        self.assertEqual(len(self.frv.authors), 3)
+        self.assertEqual(self.frv.authors[0], 'Timo Fischer')
+
+    def test_parse_category(self):
+        self.assertEqual(self.frv.category, 'cond-mat.soft')
+
+    def test_parse_id(self):
+        self.assertEqual(self.frv.id, '1205.1001v1')
+
+    def test_parse_bare_id(self):
+        self.assertEqual(self.judge.bare_id, '1001.1001')
+
+    def test_parse_published(self):
+        self.assertEqual(self.frv.year, '2012')
+        self.assertEqual(self.frv.month, 'May')
+
+    def test_form_bibtex(self):
+        self.assertEqual(self.frv.bibtex()[:21], '@article{1205.1001v1,')
+
+
+    def test_reference_error_info(self):
+        r = self.not_found
+        self.assertEqual(type(r), a2b.ReferenceErrorInfo)
+        self.assertEqual(r.message, 'Not found')
+        self.assertEqual(r.id, '1011.9999')
+        self.assertEqual(r.updated, '0')
+        r = self.invalid
+        self.assertEqual(type(r), a2b.ReferenceErrorInfo)
+        self.assertEqual(r.message, 'Invalid arXiv identifier')
+        self.assertEqual(r.id, 'x')
+        self.assertEqual(r.updated, '0')
+
+class testCLI(unittest.TestCase):
+    def setUp(self):
+        pass
+        self.vanilla = a2b.Cli(['1011.9999', '1001.1001v1', 'x'])
+        self.vanilla.run()
+        self.comments = a2b.Cli(['--comments', 'x'])
+        self.comments.run()
+        self.no_errors = a2b.Cli(['1001.1001'])
+        self.no_errors.run()
+        self.no_matches = a2b.Cli(['x'])
+        self.no_matches.run()
+
+    @patch('sys.stdin')
+    def test_read_from_stdin(self, mock_in):
+        mock_in.__iter__.return_value = ['1', '2']
+        cli = a2b.Cli([])
+        self.assertEqual(cli.args.id, ['1', '2'])
+
+    def test_comment_output(self):
+        expected = ['@comment{x: Invalid arXiv identifier}']
+        self.assertEqual(expected, self.comments.output)
+
+    def test_comment_argument_parsing(self):
+        self.assertTrue(self.comments.args.quiet)
+
+    def test_error_messages(self):
+        expected = set(['Error: Not found (1011.9999)',
+                        'Error: Invalid arXiv identifier (x)',
+                        '1 of 3 matched succesfully'])
+        actual = set(self.vanilla.messages)
+        self.assertEqual(expected, actual)
+
+    def test_output_messages(self):
+        self.assertEqual(len(self.vanilla.output), 1)
+        expected = '@article{1001.1001v1,\nAuthor        = {Philip G. Judge}'
+        self.assertEqual(self.vanilla.output[0][:55], expected)
+
+    def test_tally_errors(self):
+        self.assertEqual(self.no_errors.code, 0)
+        self.assertEqual(self.vanilla.code, 1)
+        self.assertEqual(self.no_matches.code, 2)
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_output_no_output(self, mock_out):
+        self.no_matches.print_output()
+        self.assertEqual(mock_out.getvalue(), "")
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_output_with_output(self, mock_out):
+        self.comments.print_output()
+        expected = "@comment{x: Invalid arXiv identifier}"
+        actual = mock_out.getvalue().rstrip()
+        self.assertEqual(expected, actual)
+
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_print_messages(self, mock_err):
+        self.comments.print_messages()
+        expected = "No successful matches"
+        actual = mock_err.getvalue().rstrip()
+        self.assertEqual(expected, actual)
+
+    @patch('sys.stdout', new_callable=StringIO)
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_main_function(self, mock_out, mock_err):
+        code = a2b.main(['1001.1001', 'x'])
+        self.assertEqual(code, 1)
+
+
+    @patch('arxiv2bib.arxiv_request', side_effect=a2b.FatalError('xxx'))
+    @patch('sys.stderr', new_callable=StringIO)
+    def test_fatal_error_catch(self, mock_err, mock_connect):
+        code = a2b.main(['1001.1001'])
+        self.assertEqual(code, 2)
+        self.assertEqual(mock_err.getvalue().strip(), 'xxx')
+
+
+
+
+
 
 
 # arxiv2bib_dict: get it to throw the two fatalerrors,
