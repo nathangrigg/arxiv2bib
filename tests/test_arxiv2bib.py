@@ -95,8 +95,7 @@ class testArxivRequest(unittest.TestCase):
     @patch('arxiv2bib.urlopen', side_effect=a2b.HTTPError(None, 403, None, None, None))
     def test_catch_403_error(self, mock_uo):
         cli = a2b.Cli(['0000.0000'])
-        with self.assertRaises(a2b.FatalError):
-            cli.run()
+        self.assertRaises(a2b.FatalError, cli.run)
 
     @patch('arxiv2bib.urlopen')
     def test_no_unneccesary_API_call(self, mock_uo):
@@ -106,8 +105,7 @@ class testArxivRequest(unittest.TestCase):
     @patch('arxiv2bib.urlopen', side_effect=a2b.HTTPError(None, 404, None, None, None))
     def test_catch_http_error(self, mock_uo):
         cli = a2b.Cli(['0000.0000'])
-        with self.assertRaises(a2b.FatalError):
-            cli.run()
+        self.assertRaises(a2b.FatalError, cli.run)
 
 
 class testRegularExpressions(unittest.TestCase):
