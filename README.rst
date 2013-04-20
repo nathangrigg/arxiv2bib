@@ -44,4 +44,4 @@ More information::
     $ arxiv2bib --help
 
 If you have further questions, see the documentation at
-http://nathan11g.github.com/arxiv2bib.
+http://nathangrigg.github.io/arxiv2bib.
