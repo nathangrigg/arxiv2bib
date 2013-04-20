@@ -156,4 +156,4 @@ Published under the new BSD license.
 
 [1]: http://www.pip-installer.org/en/latest/installing.html
 [2]: http://pypi.python.org/pypi/setuptools
-[3]: https://github.com/nathan11g/arxiv2bib/tarball/master
+[3]: https://github.com/nathangrigg/arxiv2bib/tarball/master
