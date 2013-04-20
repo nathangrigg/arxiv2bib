@@ -1,3 +1,6 @@
+1.0.3
+- Change github url
+
 1.0.2
 - Bug fixes for Python 3 error handling
 - Better validation of old-style arxiv id numbers

@@ -36,7 +36,7 @@ if sys.version_info >= (3,):
 
 setup(
     name = "arxiv2bib",
-    version = "1.0.2",
+    version = "1.0.3",
     description = "Get arXiv.org metadata in BibTeX format",
     author = "Nathan Grigg",
     author_email = "nathan@nathanamy.org",
