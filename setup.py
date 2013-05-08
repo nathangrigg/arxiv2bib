@@ -39,7 +39,7 @@ setup(
     version = "1.0.3",
     description = "Get arXiv.org metadata in BibTeX format",
     author = "Nathan Grigg",
-    author_email = "nathan@nathanamy.org",
+    author_email = "nathan@nathangrigg.net",
     url = "http://nathangrigg.github.io/arxiv2bib",
     py_modules = ["arxiv2bib"],
     keywords = ["arxiv", "bibtex", "latex", "citation"],
