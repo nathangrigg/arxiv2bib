@@ -105,6 +105,7 @@ class Reference(object):
     """
     def __init__(self, entry_xml):
         self.xml = entry_xml
+        self.url = self._field_text('id')
         self.id = self._id()
         self.authors = self._authors()
         self.title = self._field_text('title')
@@ -169,7 +170,10 @@ class Reference(object):
                     ("Abstract", self.summary),
                     ("Year", self.year),
                     ("Month", self.month),
-                    ("Note", self.note)]:
+                    ("Note", self.note),
+                    ("Url", self.url),
+                    ("File", self.id + ".pdf"),
+                    ]:
             if len(v):
                 lines.append("%-13s = {%s}" % (k, v))
 
