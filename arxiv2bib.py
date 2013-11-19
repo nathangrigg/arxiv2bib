@@ -35,8 +35,7 @@
 # This script usually makes only one call to arxiv.org per run.
 # No caching of any kind is performed.
 
-from urllib import urlencode
-from urllib2 import HTTPError, urlopen
+from __future__ import print_function
 from xml.etree import ElementTree
 import sys
 import re
@@ -44,6 +43,19 @@ import os
 
 if sys.version_info < (2, 6):
     raise Exception("Python 2.6 or higher required")
+
+# Python 2 compatibility code
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+    print_bytes = lambda s: sys.stdout.buffer.write(s)
+else:
+    from urllib import urlencode
+    from urllib2 import HTTPError, urlopen
+    print_bytes = lambda s: sys.stdout.write(s)
+
 
 # Namespaces
 ATOM = '{http://www.w3.org/2005/Atom}'
@@ -332,9 +344,9 @@ class Cli(object):
 
         output_string = os.linesep.join(self.output)
         try:
-            print output_string
+            print(output_string)
         except UnicodeEncodeError:
-            self.print_bytes((output_string + os.linesep).encode('utf-8'))
+            print_bytes((output_string + os.linesep).encode('utf-8'))
             if self.args.verbose:
                 self.messages.append(
                   'Could not use system encoding; using utf-8')
@@ -356,14 +368,6 @@ class Cli(object):
         if self.messages:
             self.messages.append("")
             sys.stderr.write(os.linesep.join(self.messages))
-
-    @staticmethod
-    def print_bytes(s):
-        """Print bytes to stdout in Python 2 or 3"""
-        if sys.version_info[0] == 2:
-            sys.stdout.write(s)
-        else:
-            sys.stdout.buffer.write(s)
 
     @staticmethod
     def parse_args(args):
