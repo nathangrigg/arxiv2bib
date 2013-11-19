@@ -27,8 +27,7 @@ try:
     from setuptools import setup
 except ImportError:
     sys.exit("""Error: Setuptools is required for installation.
- -> http://pypi.python.org/pypi/setuptools
- or http://pypi.python.org/pypi/distribute""")
+ -> http://pypi.python.org/pypi/setuptools""")
 
 extra = {}
 if sys.version_info >= (3,):
