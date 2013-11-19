@@ -35,8 +35,7 @@
 # This script usually makes only one call to arxiv.org per run.
 # No caching of any kind is performed.
 
-from urllib import urlencode
-from urllib2 import HTTPError, urlopen
+from __future__ import print_function
 from xml.etree import ElementTree
 import sys
 import re
@@ -44,6 +43,17 @@ import os
 
 if sys.version_info < (2, 6):
     raise Exception("Python 2.6 or higher required")
+
+# Python 2 compatibility code
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
+else:
+    from urllib import urlencode
+    from urllib2 import HTTPError, urlopen
+
 
 # Namespaces
 ATOM = '{http://www.w3.org/2005/Atom}'
@@ -332,7 +342,7 @@ class Cli(object):
 
         output_string = os.linesep.join(self.output)
         try:
-            print output_string
+            print(output_string)
         except UnicodeEncodeError:
             self.print_bytes((output_string + os.linesep).encode('utf-8'))
             if self.args.verbose:
