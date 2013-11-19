@@ -29,10 +29,6 @@ except ImportError:
     sys.exit("""Error: Setuptools is required for installation.
  -> http://pypi.python.org/pypi/setuptools""")
 
-extra = {}
-if sys.version_info >= (3,):
-    extra['use_2to3'] = True
-
 setup(
     name = "arxiv2bib",
     version = "1.0.4",
@@ -58,5 +54,4 @@ setup(
         "Environment :: Console"
         ],
     long_description = __doc__,
-    **extra
 )
