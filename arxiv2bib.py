@@ -50,9 +50,11 @@ if not PY2:
     from urllib.parse import urlencode
     from urllib.request import urlopen
     from urllib.error import HTTPError
+    print_bytes = lambda s: sys.stdout.buffer.write(s)
 else:
     from urllib import urlencode
     from urllib2 import HTTPError, urlopen
+    print_bytes = lambda s: sys.stdout.write(s)
 
 
 # Namespaces
@@ -344,7 +346,7 @@ class Cli(object):
         try:
             print(output_string)
         except UnicodeEncodeError:
-            self.print_bytes((output_string + os.linesep).encode('utf-8'))
+            print_bytes((output_string + os.linesep).encode('utf-8'))
             if self.args.verbose:
                 self.messages.append(
                   'Could not use system encoding; using utf-8')
@@ -366,14 +368,6 @@ class Cli(object):
         if self.messages:
             self.messages.append("")
             sys.stderr.write(os.linesep.join(self.messages))
-
-    @staticmethod
-    def print_bytes(s):
-        """Print bytes to stdout in Python 2 or 3"""
-        if sys.version_info[0] == 2:
-            sys.stdout.write(s)
-        else:
-            sys.stdout.buffer.write(s)
 
     @staticmethod
     def parse_args(args):
