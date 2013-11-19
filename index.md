@@ -141,13 +141,8 @@ not possible, it will encode as UTF-8.
 
 ### Python and system requirements
 
-Works with Python 2.7 or higher and has no dependencies. Also runs on
-Python 2.6, but you will need to install the
-`argparse` module.
-
-The program will also run on Python 3, with installation via pip,
-easy_install, or the included setup.py. You can also convert it manually
-with 2to3.
+Works with Python 2.7 or Python 3.3 or higher and has no dependencies. Also
+runs on Python 2.6, but you will need to install the `argparse` module.
 
 ### License
 
