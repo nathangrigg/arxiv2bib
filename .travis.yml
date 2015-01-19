@@ -6,7 +6,7 @@ python:
     - "3.4"
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install argparse; fi
-    - pip install . --use-mirrors
+    - pip install .
 script: cd tests && nosetests
 
 notifications:
