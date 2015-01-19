@@ -62,7 +62,7 @@ ATOM = '{http://www.w3.org/2005/Atom}'
 ARXIV = '{http://arxiv.org/schemas/atom}'
 
 # regular expressions to check if arxiv id is valid
-NEW_STYLE = re.compile(r'^\d{4}\.\d{4}(v\d+)?$')
+NEW_STYLE = re.compile(r'^\d{4}\.\d{4,}(v\d+)?$')
 OLD_STYLE = re.compile(r"""(?x)
 ^(
    math-ph

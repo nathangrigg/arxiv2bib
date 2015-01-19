@@ -111,39 +111,43 @@ class testArxivRequest(unittest.TestCase):
 class testRegularExpressions(unittest.TestCase):
     def test_new_style_no_version(self):
         match = a2b.NEW_STYLE.match('1234.1234')
-        self.assertTrue(bool(match))
+        self.assertTrue(match)
 
     def test_new_style_with_version(self):
         match = a2b.NEW_STYLE.match('1234.1234v1')
-        self.assertTrue(bool(match))
+        self.assertTrue(match)
 
     def test_new_style_no_match(self):
-        invalid = ['123456789', '1234.12345', '1234.1234v']
+        invalid = ['123456789', '1234.1234v']
         for x in invalid:
             match = a2b.NEW_STYLE.match(x)
-            self.assertFalse(bool(match), x)
+            self.assertFalse(match, x)
+
+    def test_longer_style_2015(self):
+        match = a2b.NEW_STYLE.match('1501.03505')
+        self.assertTrue(match)
 
     def test_old_style_no_subcategory(self):
         cats = ['physics', 'stat', 'hep-ph', 'math']
         for cat in cats:
             match = a2b.OLD_STYLE.match(cat + '/0000000')
-            self.assertTrue(bool(match), cat)
+            self.assertTrue(match, cat)
 
     def test_old_style_bad_subcategory(self):
         cats = ['physics', 'stat', 'hep-ph', 'math']
         for cat in cats:
             match = a2b.OLD_STYLE.match(cat + '.foo/0000000')
-            self.assertFalse(bool(match), cat)
+            self.assertFalse(match, cat)
 
     def test_old_style_good_subcategory(self):
         subcats = ['physics.atom-ph', 'math.CO', 'stat.TH']
         for sub in subcats:
             match = a2b.OLD_STYLE.match(sub + '/0000000')
-            self.assertTrue(bool(match), sub)
+            self.assertTrue(match, sub)
 
     def test_old_style_with_version(self):
         match = a2b.OLD_STYLE.match('physics.acc-ph/0000000v2')
-        self.assertTrue(bool(match))
+        self.assertTrue(match)
 
     def test_is_valid_new_style(self):
         self.assertTrue(a2b.is_valid('0000.0000'))
@@ -277,4 +281,3 @@ class testCLI(unittest.TestCase):
         code = a2b.main(['1001.1001'])
         self.assertEqual(code, 2)
         self.assertEqual(mock_err.getvalue().strip(), 'xxx')
-
