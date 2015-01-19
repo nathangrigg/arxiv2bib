@@ -1,3 +1,6 @@
+1.0.6
+- Update for 2015 YYMM.nnnnn ids.
+
 1.0.5
 - Run on Python3 without 2to3
 
