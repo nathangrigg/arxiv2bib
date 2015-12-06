@@ -129,6 +129,7 @@ class Reference(object):
         self.updated = self._field_text('updated')
         self.bare_id = self.id[:self.id.rfind('v')]
         self.note = self._field_text('journal_ref', namespace=ARXIV)
+        self.doi = self._field_text('doi', namespace=ARXIV)
 
     def _authors(self):
         """Extracts author names from xml."""
@@ -177,6 +178,7 @@ class Reference(object):
         for k, v in [("Author", " and ".join(self.authors)),
                     ("Title", self.title),
                     ("Eprint", self.id),
+                    ("DOI", self.doi),
                     ("ArchivePrefix", "arXiv"),
                     ("PrimaryClass", self.category),
                     ("Abstract", self.summary),
