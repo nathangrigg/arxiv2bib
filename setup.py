@@ -31,7 +31,7 @@ except ImportError:
 
 setup(
     name = "arxiv2bib",
-    version = "1.0.6",
+    version = "1.0.7",
     description = "Get arXiv.org metadata in BibTeX format",
     author = "Nathan Grigg",
     author_email = "nathan@nathangrigg.net",

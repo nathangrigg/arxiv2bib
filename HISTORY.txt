@@ -1,3 +1,6 @@
+1.0.7
+- Support for DOIs.
+
 1.0.6
 - Update for 2015 YYMM.nnnnn ids.
 
