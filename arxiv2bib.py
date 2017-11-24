@@ -166,7 +166,7 @@ class Reference(object):
         y, m = published[:4], published[5:7]
         try:
             m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                 "Aug", "Sep", "Nov", "Dec"][int(m) - 1]
+                 "Aug", "Sep", "Oct", "Nov", "Dec"][int(m) - 1]
         except:
             pass
         return y, m
