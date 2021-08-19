@@ -174,7 +174,8 @@ class Reference(object):
     def bibtex(self):
         """BibTex string of the reference."""
 
-        lines = ["@article{" + self.id]
+        label = self.authors[0].split()[-1] + self.year + self.title.split()[0]
+        lines = ["@article{" + label.lower()]
         for k, v in [("Author", " and ".join(self.authors)),
                     ("Title", self.title),
                     ("Eprint", self.id),
