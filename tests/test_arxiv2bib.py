@@ -189,7 +189,8 @@ class testArxiv2Bib(unittest.TestCase):
         self.assertEqual(self.frv.month, 'May')
 
     def test_form_bibtex(self):
-        self.assertEqual(self.frv.bibtex()[:21], '@article{1205.1001v1,')
+        expected = '@article{fischer2012membrane,'
+        self.assertEqual(self.frv.bibtex()[:len(expected)], expected)
 
     def test_reference_error_info(self):
         r = self.not_found
@@ -241,8 +242,8 @@ class testCLI(unittest.TestCase):
 
     def test_output_messages(self):
         self.assertEqual(len(self.vanilla.output), 1)
-        expected = '@article{1001.1001v1,\nAuthor        = {Philip G. Judge}'
-        self.assertEqual(self.vanilla.output[0][:55], expected)
+        expected = '@article{judge2010chromosphere,\nAuthor        = {Philip G. Judge}'
+        self.assertEqual(self.vanilla.output[0][:len(expected)], expected)
 
     def test_tally_errors(self):
         self.assertEqual(self.no_errors.code, 0)

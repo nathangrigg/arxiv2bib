@@ -173,8 +173,16 @@ class Reference(object):
 
     def bibtex(self):
         """BibTex string of the reference."""
-
-        lines = ["@article{" + self.id]
+        
+        label = self.authors[0].split()[-1] + self.year
+        
+        stop_words = {'A', 'The'}
+        if self.title.split()[0] in stop_words:
+            label += re.sub('[^A-Za-z]+', '', self.title.split()[1])
+        else:
+            label += re.sub('[^A-Za-z]+', '', self.title.split()[0])
+            
+        lines = ["@article{" + label.lower()]
         for k, v in [("Author", " and ".join(self.authors)),
                     ("Title", self.title),
                     ("Eprint", self.id),
