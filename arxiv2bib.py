@@ -253,25 +253,37 @@ def arxiv2bib_dict(id_list):
     if len(ids) == 0:
         return d
 
-    # make the api call
-    while True:
-        xml = arxiv_request(ids)
+    # Split into chunks of 100 (adjust `chunk_size` here if needed) to avoid HTTP 414 (URI too long).
+    chunk_size = 100
+    chunks = [ids[i:i + chunk_size] for i in range(0, len(ids), chunk_size)]
 
-        # check for error
-        entries = xml.findall(ATOM + "entry")
-        try:
-            first_title = entries[0].find(ATOM + "title")
-        except:
-            raise FatalError("Unable to connect to arXiv.org API.")
+    # make the api calls
+    entries = []
+    for chunk in chunks:
+        current_ids = list(chunk)
+        while True:
+            try:
+                xml = arxiv_request(current_ids)
+            except Exception as e:
+                raise FatalError(f"Failed to process chunk: {e}")
 
-        if first_title is None or first_title.text.strip() != "Error":
-            break
+            entries_xml = xml.findall(ATOM + "entry")
+            try:
+                first_title = entries_xml[0].find(ATOM + "title").text.strip() if entries_xml else ""
+            except:
+                raise FatalError("Unable to connect to arXiv.org API.")
 
-        try:
-            id = entries[0].find(ATOM + "summary").text.split()[-1]
-            del(ids[ids.index(id)])
-        except:
-            raise FatalError("Unable to parse an error returned by arXiv.org.")
+            if first_title == "Error":
+                # Handle error (try again without the ID that caused the error)
+                error_id = entries_xml[0].find(ATOM + "summary").text.split()[-1]
+                if error_id in current_ids:
+                    current_ids.remove(error_id)
+                    continue
+                else:
+                    raise FatalError(f"Unrecoverable error for arXiv ID: {error_id}.")
+            else:  # This chunk all OK
+                entries.extend(entries_xml)
+                break
 
     # Parse each reference and store it in dictionary
     for entry in entries:
